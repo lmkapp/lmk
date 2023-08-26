@@ -1,0 +1,57 @@
+/**
+ * Any CSS included here will be global. The classic template
+ * bundles Infima by default. Infima is a CSS framework designed to
+ * work well for content-centric websites.
+ */
+/* @tailwind base; */
+@tailwind components;
+@tailwind utilities;
+
+/* You can override the default Infima variables here. */
+:root {
+  --border: 214.3 31.8% 91.4%;
+  --background: 0 0% 100%;
+  --foreground: 222.2 47.4% 11.2%;
+  --muted: 210 40% 96.1%;
+  --ifm-heading-color: hsl(var(--foreground));
+  --ifm-background-color: hsl(var(--background));
+  --ifm-navbar-background-color: hsl(var(--muted));
+  --ifm-navbar-link-hover-color: hsl(var(--foreground));
+  --ifm-menu-color-active: hsl(var(--foreground));
+  --ifm-menu-color-background-active: hsl(var(--muted));
+  --ifm-breadcrumb-color-active: hsl(var(--foreground));
+  --ifm-color-primary: hsl(222.2 47.4% 50%);
+  --ifm-color-primary-dark: hsl(199 100% 45%);
+  --ifm-color-primary-darker: hsl(199 100% 35%);
+  --ifm-color-primary-darkest: hsl(199 100% 20%);
+  --ifm-color-primary-light: hsl(199 100% 65%);
+  --ifm-color-primary-lighter: hsl(199 100% 75%);
+  --ifm-color-primary-lightest: hsl(199 100% 80%);
+  --ifm-code-font-size: 95%;
+  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.1);
+}
+
+/* For readability concerns, you should choose a lighter palette in dark mode. */
+[data-theme='dark'], html[data-theme='dark'] {
+  --border: 216 34% 17%;
+  --foreground: 213 31% 91%;
+  --background: 224 71% 4%;
+  --muted: 223 47% 11%;
+  --ifm-color-primary: hsl(223 47% 50%);
+  --ifm-color-primary-light: hsl(199 100% 45%);
+  --ifm-color-primary-lighter: hsl(199 100% 35%);
+  --ifm-color-primary-lightest: hsl(199 100% 20%);
+  --ifm-color-primary-dark: hsl(199 100% 65%);
+  --ifm-color-primary-darker: hsl(199 100% 75%);
+  --ifm-color-primary-darkest: hsl(199 100% 80%);
+  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.3);
+  /* --aa-primary-color-rgb: 255,0,0 !important;
+  --aa-muted-color-rgb: 255,0,0 !important;
+  --aa-base-unit: 1rem !important;
+  --aa-spacing-factor: 1rem !important;
+  --aa-input-color-rgb: 41, 61, 112 !important; */
+}
+
+html {
+  font-family: Roboto, system-ui, sans-serif !important;
+}

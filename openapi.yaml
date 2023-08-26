@@ -1,0 +1,781 @@
+openapi: 3.0.0
+paths:
+  /v1/app/current:
+    get:
+      operationId: getCurrentApp
+      parameters: []
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppResponse'
+      tags:
+        - app
+  /v1/headlessAuth:
+    post:
+      operationId: createHeadlessAuthSession
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateHeadlessAuthSessionRequest'
+      responses:
+        '201':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HeadlessAuthSessionResponse'
+      tags:
+        - headlessAuth
+  /v1/headlessAuth/{sessionId}:
+    get:
+      operationId: getHeadlessAuthSession
+      parameters:
+        - name: sessionId
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HeadlessAuthSessionResponse'
+      tags:
+        - headlessAuth
+  /v1/headlessAuth/{sessionId}/token:
+    get:
+      operationId: retrieveHeadlessAuthSessionToken
+      parameters:
+        - name: sessionId
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccessTokenResponse'
+      tags:
+        - headlessAuth
+  /v1/headlessAuth/refresh:
+    post:
+      operationId: refreshHeadlessAuthToken
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HeadlessAuthRefreshTokenRequest'
+      responses:
+        '201':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccessTokenResponse'
+      tags:
+        - headlessAuth
+  /oauth/authorize:
+    post:
+      operationId: authorize
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AuthorizeOauthRequest'
+      responses:
+        '201':
+          description: ''
+      tags:
+        - oauth
+  /oauth/token:
+    post:
+      operationId: token
+      parameters:
+        - name: authorization
+          required: true
+          in: header
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AccessTokenRequest'
+      responses:
+        '201':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccessTokenResponse'
+      tags:
+        - oauth
+  /v1/notificationChannel:
+    get:
+      operationId: listNotificationChannels
+      parameters: []
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationChannelsResponse'
+      tags:
+        - notification
+  /v1/event:
+    post:
+      operationId: postEvent
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EventRequest'
+      responses:
+        '201':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventResponse'
+      tags:
+        - event
+  /v1/session:
+    post:
+      operationId: createSession
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateSessionRequest'
+      responses:
+        '201':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionResponse'
+      tags:
+        - session
+  /v1/session/{sessionId}:
+    get:
+      operationId: getSession
+      parameters:
+        - name: sessionId
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionResponse'
+      tags:
+        - session
+    patch:
+      operationId: updateSession
+      parameters:
+        - name: sessionId
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateSessionRequest'
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionResponse'
+      tags:
+        - session
+  /v1/session/{sessionId}/end:
+    post:
+      operationId: endSession
+      parameters:
+        - name: sessionId
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        '201':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionResponse'
+      tags:
+        - session
+  /v1/session/{sessionId}/action:
+    post:
+      operationId: sessionAction
+      parameters:
+        - name: sessionId
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SessionActionRequest'
+      responses:
+        '201':
+          description: ''
+      tags:
+        - session
+info:
+  title: LMK API
+  description: ''
+  version: 0.0.1
+  contact: {}
+tags:
+  - name: user
+    description: Endpoints related to user management
+servers: []
+components:
+  schemas:
+    AppResponse:
+      type: object
+      properties:
+        appId:
+          type: string
+        name:
+          type: string
+        iconUrl:
+          type: string
+        description:
+          type: string
+        introWarningMarkdown:
+          type: string
+        createdAt:
+          type: string
+        lastUpdatedAt:
+          type: string
+      required:
+        - appId
+        - name
+        - iconUrl
+        - description
+        - createdAt
+        - lastUpdatedAt
+    CreateHeadlessAuthSessionRequest:
+      type: object
+      properties:
+        appId:
+          type: string
+        scope:
+          type: string
+      required:
+        - appId
+        - scope
+    HeadlessAuthSessionResponse:
+      type: object
+      properties:
+        sessionId:
+          type: string
+        appId:
+          type: string
+        scope:
+          type: string
+        authorizeUrl:
+          type: string
+        createdAt:
+          type: string
+      required:
+        - sessionId
+        - appId
+        - scope
+        - authorizeUrl
+        - createdAt
+    AccessTokenResponse:
+      type: object
+      properties:
+        access_token:
+          type: string
+        token_type:
+          type: string
+        expires_in:
+          type: number
+        scope:
+          type: string
+        refresh_token:
+          type: string
+      required:
+        - access_token
+        - token_type
+        - expires_in
+        - scope
+    HeadlessAuthRefreshTokenRequest:
+      type: object
+      properties:
+        appId:
+          type: string
+        refreshToken:
+          type: string
+      required:
+        - appId
+        - refreshToken
+    AuthorizeOauthRequest:
+      type: object
+      properties:
+        client_id:
+          type: string
+        response_type:
+          type: string
+        redirect_uri:
+          type: string
+        scope:
+          type: string
+          pattern: /[\w\-:]+( [\w\-:])*/
+        state:
+          type: string
+        notification_channels:
+          type: string
+        token:
+          type: string
+        csrf_token:
+          type: string
+      required:
+        - client_id
+        - response_type
+        - redirect_uri
+        - scope
+        - state
+        - token
+        - csrf_token
+    AccessTokenRequest:
+      type: object
+      properties:
+        grant_type:
+          type: string
+          enum:
+            - authorization_code
+            - refresh_token
+        redirect_uri:
+          type: string
+        code:
+          type: string
+        refresh_token:
+          type: string
+      required:
+        - grant_type
+        - redirect_uri
+        - code
+        - refresh_token
+    NotificationChannelsResponse:
+      type: object
+      properties:
+        channels:
+          type: array
+          items:
+            $ref: '#/components/schemas/NotificationChannelResponse'
+      required:
+        - channels
+    EventRequest:
+      type: object
+      properties:
+        sessionId:
+          type: string
+        message:
+          type: string
+        contentType:
+          type: string
+          enum:
+            - text/plain
+            - text/markdown
+        notificationConfig:
+          $ref: '#/components/schemas/EventNotificationConfiguration'
+      required:
+        - message
+    EventResponse:
+      type: object
+      properties:
+        eventId:
+          type: string
+        sessionId:
+          type: string
+        userId:
+          type: string
+        actor:
+          $ref: '#/components/schemas/ActorResponse'
+        message:
+          type: string
+        contentType:
+          type: string
+          enum:
+            - text/plain
+            - text/markdown
+        channels:
+          type: array
+          items:
+            $ref: '#/components/schemas/NotificationChannelInfo'
+        createdAt:
+          type: string
+      required:
+        - eventId
+        - userId
+        - actor
+        - message
+        - contentType
+        - channels
+        - createdAt
+    CreateSessionRequest:
+      type: object
+      properties:
+        state:
+          oneOf:
+            - $ref: '#/components/schemas/JupyterSessionState'
+            - $ref: '#/components/schemas/ProcessSessionState'
+            - $ref: '#/components/schemas/NoneSessionState'
+        name:
+          type: string
+      required:
+        - state
+        - name
+    SessionResponse:
+      type: object
+      properties:
+        state:
+          oneOf:
+            - $ref: '#/components/schemas/JupyterSessionState'
+            - $ref: '#/components/schemas/ProcessSessionState'
+            - $ref: '#/components/schemas/NoneSessionState'
+        sessionId:
+          type: string
+        name:
+          type: string
+        type:
+          enum:
+            - jupyter
+            - process
+            - none
+          type: string
+        createdAt:
+          type: string
+        createdByActor:
+          $ref: '#/components/schemas/ActorResponse'
+        lastUpdatedAt:
+          type: string
+        lastUpdatedByActor:
+          $ref: '#/components/schemas/ActorResponse'
+        endedAt:
+          type: string
+          nullable: true
+        endedByActor:
+          nullable: true
+          allOf:
+            - $ref: '#/components/schemas/ActorResponse'
+      required:
+        - state
+        - sessionId
+        - name
+        - type
+        - createdAt
+        - createdByActor
+        - lastUpdatedAt
+        - lastUpdatedByActor
+        - endedAt
+        - endedByActor
+    UpdateSessionRequest:
+      type: object
+      properties:
+        state:
+          oneOf:
+            - $ref: '#/components/schemas/PartialJupyterSessionState'
+            - $ref: '#/components/schemas/PartialProcessSessionState'
+            - $ref: '#/components/schemas/PartialNoneSessionState'
+    SessionActionRequest:
+      type: object
+      properties:
+        body:
+          oneOf:
+            - $ref: '#/components/schemas/ProcessSendSignalRequest'
+        action:
+          type: string
+      required:
+        - action
+    ActorResponse:
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+            - USER
+            - APP
+            - ANONYMOUS
+        actorId:
+          type: string
+        iconUrl:
+          type: string
+        name:
+          type: string
+      required:
+        - type
+        - actorId
+        - name
+    NotificationChannelResponse:
+      type: object
+      properties:
+        payload:
+          oneOf:
+            - $ref: '#/components/schemas/EmailChannelPayload'
+            - $ref: '#/components/schemas/TextMessageChannelPayload'
+          discriminator:
+            propertyName: type
+            mapping:
+              email: '#/components/schemas/EmailChannelPayload'
+              text-message: '#/components/schemas/TextMessageChannelPayload'
+        notificationChannelId:
+          type: string
+        name:
+          type: string
+        order:
+          type: number
+        isDefault:
+          type: boolean
+        isManaged:
+          type: boolean
+        isVerified:
+          type: boolean
+        verificationRequired:
+          type: boolean
+        createdAt:
+          type: string
+        createdByActor:
+          $ref: '#/components/schemas/ActorResponse'
+        lastUpdatedAt:
+          type: string
+        lastUpdatedByActor:
+          $ref: '#/components/schemas/ActorResponse'
+      required:
+        - payload
+        - notificationChannelId
+        - name
+        - order
+        - isDefault
+        - isManaged
+        - isVerified
+        - verificationRequired
+        - createdAt
+        - createdByActor
+        - lastUpdatedAt
+        - lastUpdatedByActor
+    EventNotificationConfiguration:
+      type: object
+      properties:
+        notify:
+          type: boolean
+        channelIds:
+          type: array
+          items:
+            type: string
+      required:
+        - notify
+    NotificationChannelInfo:
+      type: object
+      properties:
+        notificationChannelId:
+          type: string
+        type:
+          type: string
+          enum:
+            - email
+            - text-message
+        name:
+          type: string
+        status:
+          type: string
+          enum:
+            - PENDING
+            - DELIVERED
+            - FAILED
+      required:
+        - notificationChannelId
+        - type
+        - name
+        - status
+    JupyterSessionState:
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+            - jupyter
+        url:
+          type: string
+        notebookName:
+          type: string
+        shellState:
+          type: string
+        cellState:
+          type: string
+        cellText:
+          type: string
+        cellError:
+          type: string
+        executionNum:
+          type: number
+        cellStartedAt:
+          type: string
+        cellFinishedAt:
+          type: string
+        notifyOn:
+          type: string
+        notifyChannel:
+          type: string
+      required:
+        - type
+        - notifyOn
+    ProcessSessionState:
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+            - process
+        hostname:
+          type: string
+        command:
+          type: string
+        pid:
+          type: number
+        notifyOn:
+          type: string
+        notifyChannel:
+          type: string
+        exitCode:
+          type: number
+      required:
+        - type
+        - hostname
+        - command
+        - pid
+        - notifyOn
+    NoneSessionState:
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+            - none
+      required:
+        - type
+    PartialJupyterSessionState:
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+            - jupyter
+        url:
+          type: string
+        notebookName:
+          type: string
+        shellState:
+          type: string
+        cellState:
+          type: string
+        cellText:
+          type: string
+        cellError:
+          type: string
+        executionNum:
+          type: number
+        cellStartedAt:
+          type: string
+        cellFinishedAt:
+          type: string
+        notifyOn:
+          type: string
+        notifyChannel:
+          type: string
+    PartialProcessSessionState:
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+            - process
+        hostname:
+          type: string
+        command:
+          type: string
+        pid:
+          type: number
+        notifyOn:
+          type: string
+        notifyChannel:
+          type: string
+        exitCode:
+          type: number
+    PartialNoneSessionState:
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+            - none
+    ProcessSendSignalRequest:
+      type: object
+      properties:
+        signal:
+          type: number
+      required:
+        - signal
+    EmailChannelPayload:
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+            - email
+        emailAddress:
+          type: string
+      required:
+        - type
+        - emailAddress
+    TextMessageChannelPayload:
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+            - text-message
+        phoneNumber:
+          type: string
+      required:
+        - type
+        - phoneNumber
