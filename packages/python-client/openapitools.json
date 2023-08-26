@@ -1,0 +1,25 @@
+{
+  "$schema": "./node_modules/@openapitools/openapi-generator-cli/config.schema.json",
+  "spaces": 2,
+  "generator-cli": {
+    "version": "6.4.0",
+    "generators": {
+      "client": {
+        "generatorName": "python-nextgen",
+        "output": "#{cwd}",
+        "glob": "../../openapi.yaml",
+        "globalProperty": {
+          "apiTests": false,
+          "apiDocs": false,
+          "modelTests": false,
+          "modelDocs": false
+        },
+        "additionalProperties": {
+          "packageName": "lmk.generated",
+          "generateSourceCodeOnly": true,
+          "floatStrictType": false
+        }
+      }
+    }
+  }
+}

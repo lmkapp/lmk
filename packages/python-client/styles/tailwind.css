@@ -1,0 +1,16 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+  .jp-lmk-code {
+    font-size: var(--jp-code-font-size);
+    font-family: var(--jp-cell-prompt-font-family);
+  }
+
+  .lmk-link, .lmk-link:hover, .lmk-link:visited {
+    color: var(--jp-mirror-editor-variable-2-color);
+    cursor: pointer;
+    text-decoration: underline;
+  }
+}
