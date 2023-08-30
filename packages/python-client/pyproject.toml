@@ -49,6 +49,7 @@ jupyter = [
 ]
 dev = ["black", "bump2version", "jupyterlab"]
 publish = ["build", "twine"]
+docs = ["novella~=0.2.6", "pydoc-markdown[novella]~=4.8.2"]
 
 [project.urls]
 Homepage = "https://github.com/cfeenstra67/lmk-python"
@@ -87,3 +88,6 @@ dependencies = [
 path = "."
 build_cmd = "build:prod"
 npm = "pnpm"
+
+[tool.hatch.metadata]
+allow-direct-references = true

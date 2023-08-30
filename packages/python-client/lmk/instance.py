@@ -196,6 +196,8 @@ class Channels:
         self.instance.default_channel = value
 
     def fetch(self, async_req: bool = False, force: bool = False) -> None:
+        """
+        """
         ctx_managers = []
         if async_req:
             ctx_managers.append(self._afetch_lock)
@@ -280,6 +282,8 @@ class Channels:
         fetch: bool = True,
         async_req: bool = False,
     ) -> List[NotificationChannelResponse]:
+        """
+        """
         if isinstance(type, str) and not isinstance(type, ChannelType):
             type = ChannelType(type)
 
@@ -308,6 +312,8 @@ class Channels:
         fetch: bool = True,
         async_req: bool = False,
     ) -> NotificationChannelResponse | None:
+        """
+        """
         def pick(channels):
             if len(channels) > 1:
                 raise exc.MultipleChannelsMatched(channels)
@@ -329,7 +335,6 @@ class Channels:
 
 class Instance:
     """ """
-
     def __init__(
         self,
         profile: Optional[str] = None,
@@ -737,6 +742,8 @@ class Instance:
         state: Dict[str, Any] = None,
         async_req: bool = False,
     ) -> SessionResponse:
+        """
+        """
         api = SessionApi(self.client)
 
         if isinstance(state, dict):
@@ -761,6 +768,8 @@ class Instance:
         session_id: str,
         async_req: bool = False,
     ) -> None:
+        """
+        """
         api = SessionApi(self.client)
 
         return pipeline(async_req)(

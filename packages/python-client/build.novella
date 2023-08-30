@@ -1,0 +1,13 @@
+
+do "copy-files" {
+  paths = ["./docs"]
+}
+
+do "preprocess-markdown" {
+  path = "."
+  update_with processor -> {
+    processor._renderer.insert_header_anchors = False
+    processor._renderer.render_novella_anchors = False
+  }
+  use "pydoc"
+}
