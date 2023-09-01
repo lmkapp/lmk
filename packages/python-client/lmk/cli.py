@@ -29,8 +29,15 @@ from lmk.utils.logging import setup_logging
 
 
 cli_args = stack_decorators(
-    click.option("-l", "--log-level", default="WARN", help="Log level, defaults to WARN"),
-    click.option("-b", "--base-path", default=os.path.expanduser("~/.lmk"), help="Path to the LMK configuration directory; defaults to ~/.lmk"),
+    click.option(
+        "-l", "--log-level", default="WARN", help="Log level, defaults to WARN"
+    ),
+    click.option(
+        "-b",
+        "--base-path",
+        default=os.path.expanduser("~/.lmk"),
+        help="Path to the LMK configuration directory; defaults to ~/.lmk",
+    ),
 )
 
 
@@ -62,7 +69,7 @@ def cli(ctx: click.Context, log_level: str, base_path: str):
     help=(
         "By default, this will be a no-op if you are already logged in. Pass --force to "
         "force the CLI to re-authenticate with LMK."
-    )
+    ),
 )
 def login(force):
     instance = get_instance()
@@ -77,7 +84,7 @@ attach_option = click.option(
         "console in real time. You can detach at any time, at which point you can choose to let the "
         "process keep running or interrupt it. After detaching, you will also be able to re-attach at any "
         "time while the process is running."
-    )
+    ),
 )
 
 name_option = click.option(
@@ -88,13 +95,16 @@ name_option = click.option(
         "Job name for the job you want to run. This will be visible in the LMK dashboard, "
         "and it can be passed to other commands that take a job ID such as `attach`, `kill`, etc. "
         "If not passed, a name will be generated."
-    )
+    ),
 )
 
 
 def notify_on_option(default: str = "none"):
     return click.option(
-        "-n", "--notify", default=default, type=click.Choice(["stop", "error", "none"]),
+        "-n",
+        "--notify",
+        default=default,
+        type=click.Choice(["stop", "error", "none"]),
         help=(
             "Set the initial `notify_on` value for the process. If `stop`, you will get a notification "
             "whenever the process completes for any reason. If `error`, you will only get a notification "
@@ -102,7 +112,7 @@ def notify_on_option(default: str = "none"):
             "still be able to monitor the process of the script via the LMK web app. This can be changed after "
             "launching the process initially, so if you omit it initially you can always choose to notify yourself "
             "later."
-        )
+        ),
     )
 
 
@@ -113,7 +123,7 @@ def notify_on_option(default: str = "none"):
         "Run a command line process, and monitor it using LMK. This means that you will be able "
         "to notify yourself when it finishes or finishes with an error, and interrupt it remotely if "
         "you choose."
-    )
+    ),
 )
 @click.option(
     "--daemon/--no-daemon",
@@ -121,7 +131,7 @@ def notify_on_option(default: str = "none"):
     help=(
         "Daemonize the monitored process. This is the default, and it means that you can detach "
         "and re-attach to the process while it's running without interrupting it."
-    )
+    ),
 )
 @attach_option
 @name_option
@@ -187,7 +197,7 @@ monitor_args = stack_decorators(
     help=(
         "Monitor a script that has already been started and either paused via Ctrl-Z or "
         "is running in a different terminal."
-    )
+    ),
 )
 @monitor_args
 @click.pass_context
@@ -232,7 +242,7 @@ async def monitor(
     help=(
         "Attach to a monitored job, so you will see the output in your terminal in real time. You can "
         "detach from or interrupt the job while attached."
-    )
+    ),
 )
 @click.argument(
     "job_id",
@@ -257,11 +267,13 @@ def pad(value: str, length: int, character: str = " ") -> str:
     return value + character * (length - len(value))
 
 
-@async_command(
-    cli,
-    help="List jobs monitored by LMK"
+@async_command(cli, help="List jobs monitored by LMK")
+@click.option(
+    "-a",
+    "--all",
+    is_flag=True,
+    help="List all jobs; by default only running jobs are shown",
 )
-@click.option("-a", "--all", is_flag=True, help="List all jobs; by default only running jobs are shown")
 @click.pass_context
 async def jobs(ctx: click.Context, all: bool):
     manager = ctx.obj["manager"]
@@ -291,13 +303,15 @@ async def jobs(ctx: click.Context, all: bool):
 @async_command(
     cli,
     short_help="Send a signal to a monitored job",
-    help="Send a signal to a monitored job to interrupt or terminate it."
+    help="Send a signal to a monitored job to interrupt or terminate it.",
 )
 @click.argument(
     "job_id",
     # help="ID of the job you'd like to kill. Use `lmk jobs` to list running jobs."
 )
-@click.option("-s", "--signal", default="SIGINT", help="Signal to send, defaults to SIGINT")
+@click.option(
+    "-s", "--signal", default="SIGINT", help="Signal to send, defaults to SIGINT"
+)
 @click.pass_context
 async def kill(ctx: click.Context, job_id: str, signal: str):
     manager = ctx.obj["manager"]
@@ -331,7 +345,7 @@ async def kill(ctx: click.Context, job_id: str, signal: str):
         "Change the `notify_on` value for a running job to a new value. This will set the job to "
         "notify you when it's finished running, exits with an error, or change it to not notify you "
         "if it's currently configured to send you a notification."
-    )
+    ),
 )
 @click.argument(
     "job_id",
@@ -356,7 +370,7 @@ async def notify(ctx: click.Context, job_id: str, notify: str) -> None:
     help=(
         "Install the LMK shell plugin, which allows you to monitor jobs "
         "using shell syntax like %1, %2, etc."
-    )
+    ),
 )
 @click.option(
     "-i",
@@ -373,13 +387,14 @@ async def notify(ctx: click.Context, job_id: str, notify: str) -> None:
     help="Uninstall the shell CLI script from the shell profile",
 )
 @click.option(
-    "-p", "--print",
+    "-p",
+    "--print",
     is_flag=True,
     default=False,
     help=(
         "Print the shell plugin script; this is useful if the automatic installation process "
         "via --install is not working properly."
-    )
+    ),
 )
 @click.option(
     "-s",
@@ -388,7 +403,7 @@ async def notify(ctx: click.Context, job_id: str, notify: str) -> None:
     help=(
         "Shell flavor that you're using, e.g. bash or zsh. If this is not passed, "
         "the shell you're currently using will be detected automatically."
-    )
+    ),
 )
 @click.pass_context
 def shell_plugin(

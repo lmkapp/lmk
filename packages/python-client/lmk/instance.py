@@ -169,7 +169,7 @@ class Channels:
     # Iterate through notification channels
     for channel in lmk.channels:
         print(channel)
-    
+
     # Iterate through notification channels asynchronously
     async for channel in lmk.channels:
         print(channel)
@@ -223,7 +223,7 @@ class Channels:
     def default(self) -> Optional[str]:
         """
         The default notification channel; If ``notify()`` is called without passing
-        ``notification_channels``, the notification will be sent to this channel. If you 
+        ``notification_channels``, the notification will be sent to this channel. If you
         do not set this value, it will be set to the default notification channel for
         your account.
 
@@ -412,6 +412,7 @@ class Channels:
         :return: A notification channel matching the given parameters, or ``None`` if none exists.
         :rtype: NotificationChannelResponse | None
         """
+
         def pick(channels):
             if len(channels) > 1:
                 raise exc.MultipleChannelsMatched(channels)
@@ -433,6 +434,7 @@ class Channels:
 
 class Instance:
     """ """
+
     def __init__(
         self,
         profile: Optional[str] = None,
@@ -849,7 +851,7 @@ class Instance:
         Send a notification to one of your configured notification channels.
 
         **Note:** This method requires you to be [logged in](#login) to LMK.
-        
+
         <details><summary>Usage Example</summary>
         <p>
 
@@ -872,8 +874,8 @@ class Instance:
         ``text/markdown`` are supported. Defaults to ``text/markdown``
         :type content_type: str, optional
         :param notification_channels: A list of notification channel IDs or notification channel
-        objects that you want to send the notification to. If ``None`` and ``notify = True`` (the 
-        default), this will be sent to the default notification channel for your account, which is 
+        objects that you want to send the notification to. If ``None`` and ``notify = True`` (the
+        default), this will be sent to the default notification channel for your account, which is
         the primary email address associated with your account by default. Defaults to ``None``
         :type notification_channels: List[str | NotificationChannelResponse], optional
         :param notify: ``True`` if you want to send a notification to one or more of your configured
@@ -922,13 +924,13 @@ class Instance:
         """
         Create an interactive session, which you can use to remotely monitor a process
         or Jupyter Notebook remotely via the LMK web app. You shouldn't have to use this
-        method directly in normal usage, rather it will be invoed by 
-        
+        method directly in normal usage, rather it will be invoed by
+
         **Note:** This method requires you to be [logged in](#login) to LMK.
 
         :param name: The name of the session. This will appear in the LMK app.
         :type name: str
-        :param state: The initial state parameters for the session. The ``type`` 
+        :param state: The initial state parameters for the session. The ``type``
         field is always required, but the rest of the required fields depend on what
         type of session it is. See the REST API documentation for more information.
         :type state: Dict[str, Any]
