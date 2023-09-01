@@ -106,6 +106,11 @@ const config = {
             position: 'right'
           },
           {
+            href: 'https://app.lmkapp.dev',
+            label: 'App',
+            position: 'right',
+          },
+          {
             href: 'https://github.com/lmkapp/lmk',
             label: 'GitHub',
             position: 'right',

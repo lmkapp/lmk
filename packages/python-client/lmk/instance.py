@@ -221,6 +221,24 @@ class Channels:
 
     @property
     def default(self) -> Optional[str]:
+        """
+        The default notification channel; If ``notify()`` is called without passing
+        ``notification_channels``, the notification will be sent to this channel. If you 
+        do not set this value, it will be set to the default notification channel for
+        your account.
+
+        <details><summary>Usage Example</summary>
+        <p>
+
+        ```python
+        import lmk
+
+        lmk.channels.default = lmk.channels.get(type="text-message")
+        ```
+
+        </p>
+        </details>
+        """
         return self.instance.default_channel
 
     @default.setter

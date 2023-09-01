@@ -14,18 +14,23 @@ There are currently two different ways you can use LMK (more to come!):
 
 ## Installation
 
-LMK is distributed as a python package, so you can install it using `pip`:
+LMK is distributed as a python package, so you can install it using `pip`. There are extra dependencies required based on what you'd like to use it for; to install all dependencies you can run:
 ```bash
-pip install lmk-python
+pip install "lmkapp[jupyter,cli]"
 ```
-If you're going to use it to monitor a jupyter notebook, you
-should install the jupyter extras:
+
+If you're only planning to use it to monitor jupyter notebooks, you can just install the `jupyter` extras:
 ```bash
-pip install "lmk-python[jupyter]"
+pip install "lmkapp[jupyter]"
+```
+
+If you're only planning to use it to monitor command-line processes, you can just install the `cli` extras:
+```bash
+pip install "lmkapp[cli]"
 ```
 
 ## Get Started
 
 To get started with using LMK, choose one of the two use-cases below that you'd like to use it for:
-- [Monitor a Jupyter Notebook](/docs/jupyter)
-- [Monitor a Command Line Script](/docs/process)
+- [Monitor a Jupyter Notebook](/docs/python/jupyter)
+- [Monitor a Command Line Script](/docs/cli/process)

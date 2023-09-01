@@ -1,18 +1,18 @@
 ---
 sidebar_position: 1
 ---
-# Monitoring Notebooks
+# Monitoring a Jupyter Notebook
 
 :::note
 
 Make sure you've installed the `jupyter` extras for the package:
 ```bash
-pip install "lmk-python[jupyter]"
+pip install "lmkapp[jupyter]"
 ```
 
 Or from within a Jupyter notebook:
 ```bash
-!pip install "lmk-python[jupyter]"
+!pip install "lmkapp[jupyter]"
 ```
 
 :::
@@ -39,7 +39,7 @@ import time
 time.sleep(10)
 ```
 
-If you run that cell, you will send yourself a notification using the current [default notification channel](/docs/python#default-notification-channel) when the cell is finished running.
+If you run that cell, you will send yourself a notification using the current [default notification channel](/docs/python/api#default-notification-channel) when the cell is finished running.
 
 Arguments for the cell magic:
 

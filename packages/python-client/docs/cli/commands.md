@@ -1,3 +1,6 @@
+---
+sidebar_position: 3
+---
 # Commands
 
 This page will show you all of the available commands and options for the LMK CLI. The primary function of the LMK CLI is to allow you to monitor, notify yourself, and interrupt command-line processes remotely.
