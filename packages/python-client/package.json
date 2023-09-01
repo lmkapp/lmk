@@ -65,7 +65,7 @@
     "pypi-upload": "twine upload dist/lmk_*",
     "test:python": "venv/bin/py.test -vv tests",
     "tox": "venv/bin/tox",
-    "npm-publish": "pnpm readme:npm && pnpm publish --access public --no-git-checks && pnpm readme:git"
+    "npm-publish": "pnpm readme:npm && pnpm publish --access public --no-git-checks; pnpm readme:git"
   },
   "dependencies": {
     "@jupyter-widgets/base": "^1.1.10 || ^2 || ^3 || ^4 || ^5 || ^6",
