@@ -10,7 +10,7 @@ import threading
 import time
 import webbrowser
 from datetime import datetime, timedelta
-from typing import Optional, List, Any, Dict, AsyncContextManager
+from typing import Optional, List, Any, Dict, AsyncContextManager, Union
 
 import aiohttp
 from blinker import signal
@@ -196,7 +196,7 @@ class Channels:
         return self._fetch_state
 
     @fetch_state.setter
-    def fetch_state(self, value: ChannelsState | str) -> None:
+    def fetch_state(self, value: Union[ChannelsState, str]) -> None:
         if isinstance(value, str) and not isinstance(value, ChannelsState):
             value = ChannelsState(value)
         if value == self._fetch_state:
@@ -242,7 +242,7 @@ class Channels:
         return self.instance.default_channel
 
     @default.setter
-    def default(self, value: Optional[str | NotificationChannelResponse]) -> None:
+    def default(self, value: Optional[Union[str, NotificationChannelResponse]]) -> None:
         self.instance.default_channel = value
 
     def fetch(self, async_req: bool = False, force: bool = False) -> None:
@@ -339,8 +339,8 @@ class Channels:
 
     def list(
         self,
-        name: str | None = None,
-        type: str | ChannelType | None = None,
+        name: Optional[str] = None,
+        type: Optional[Union[str, ChannelType]] = None,
         name_exact: bool = False,
         fetch: bool = True,
         async_req: bool = False,
@@ -387,12 +387,12 @@ class Channels:
 
     def get(
         self,
-        name: str | None = None,
-        type: str | ChannelType | None = None,
+        name: Optional[str] = None,
+        type: Optional[Union[str, ChannelType]] = None,
         name_exact: bool = False,
         fetch: bool = True,
         async_req: bool = False,
-    ) -> NotificationChannelResponse | None:
+    ) -> Optional[NotificationChannelResponse]:
         """
         Get a single notification channel with the given parameters.
 
@@ -482,13 +482,13 @@ class Instance:
         )
         self.channels = Channels(self)
 
+        self.sync_config = sync_config
         self.profile = profile
         self.config_path = config_path
         self.access_token = access_token
         self.refresh_token = refresh_token
         self.access_token_expires = access_token_expires
         self.server_url = server_url
-        self.sync_config = sync_config
 
         self._load_config()
 
@@ -530,7 +530,7 @@ class Instance:
 
     @default_channel.setter
     def default_channel(
-        self, value: Optional[str | NotificationChannelResponse]
+        self, value: Optional[Union[str, NotificationChannelResponse]]
     ) -> None:
         LOGGER.debug(
             "Setting default channel; Current: %s, new: %s", self.default_channel, value
@@ -843,7 +843,7 @@ class Instance:
         self,
         message: str,
         content_type: str = "text/markdown",
-        notification_channels: Optional[List[str | NotificationChannelResponse]] = None,
+        notification_channels: Optional[List[Union[str, NotificationChannelResponse]]] = None,
         notify: bool = True,
         async_req: bool = False,
     ) -> EventResponse:

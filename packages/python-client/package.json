@@ -64,7 +64,9 @@
     "readme:git": "mv README.md npm.README.md && mv git.README.md README.md",
     "pypi-check": "twine check dist/lmk_*",
     "pypi-upload-test": "twine upload --repository-url https://test.pypi.org/legacy/ dist/lmk_*",
-    "pypi-upload": "twine upload dist/lmk_*"
+    "pypi-upload": "twine upload dist/lmk_*",
+    "test:python": "venv/bin/py.test -vv tests",
+    "tox": "venv/bin/tox"
   },
   "dependencies": {
     "@jupyter-widgets/base": "^1.1.10 || ^2 || ^3 || ^4 || ^5 || ^6",
