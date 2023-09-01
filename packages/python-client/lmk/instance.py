@@ -144,7 +144,39 @@ def handle_error(is_async: bool = False) -> Any:
 
 
 class Channels:
-    """ """
+    """
+    An instance of this class is available at the top level of the ``lmk`` module under the
+    ``lmk.channels`` attribute. This class's function is to simplify fetching and searching
+    for notification channels. Channels are always fetched lazily when required based on
+    ``get()``, ``list()``, or iterating through the ``channels`` object (synchronously or
+    asynchronously).
+
+    <details><summary>Usage Example</summary>
+    <p>
+
+    ```python
+    import lmk
+
+    # Check that the client is logged in (optional)
+    # If using for the first time on a new device, call lmk.login()
+    assert lmk.logged_in()
+
+    # Get an email notification channel
+    channel = lmk.channels.get(type="email")
+    # Get a text message notification channel asynchronously
+    channel = await lmk.channels.get(type="text-message", async_req=True)
+
+    # Iterate through notification channels
+    for channel in lmk.channels:
+        print(channel)
+    
+    # Iterate through notification channels asynchronously
+    async for channel in lmk.channels:
+        print(channel)
+    ```
+    </p>
+    </details>
+    """
 
     def __init__(self, instance: "Instance") -> None:
         self.instance = instance
@@ -197,6 +229,19 @@ class Channels:
 
     def fetch(self, async_req: bool = False, force: bool = False) -> None:
         """
+        Fetch notification channels.
+
+        **Note:** This requires the client to be logged in.
+
+        :param async_req: ``True`` if you want to send the request asynchronously, in which case this
+        method will return a coroutine. Defaults to ``False``.
+        :type async_req: bool, optional
+        :param force: If ``True``, refetch notification channels even if they have already
+        been fetched successfully. By default, fetching will be skipped if it's already been done
+        successfully.
+
+        :return: This method does not return anything
+        :rtype: None
         """
         ctx_managers = []
         if async_req:
@@ -283,6 +328,24 @@ class Channels:
         async_req: bool = False,
     ) -> List[NotificationChannelResponse]:
         """
+        List notification channels. This will fetch notification channels if they haven't been
+        fetched yet.
+
+        :param name: Filter down to notification channels with the given name
+        :type name: str, optional
+        :param name_exact: Only return channels whose names exactly match ``name``. By default,
+        the name matching is case insensitive.
+        :type name_exact: bool, optional
+        :param type: Filter to only notification channels of this type
+        :type type: str | ChannelType, optional
+        :param fetch: Fetch notification channels if they haven't been fetched yet.
+        :type fetch: bool, optional
+        :param async_req: ``True`` if you want to send the request asynchronously, in which case this
+        method will return a coroutine. Defaults to ``False``.
+        :type async_req: bool, optional
+
+        :return: A list of notification channels matching the given parameters
+        :rtype: List[NotificationChannelResponse]
         """
         if isinstance(type, str) and not isinstance(type, ChannelType):
             type = ChannelType(type)
@@ -313,6 +376,23 @@ class Channels:
         async_req: bool = False,
     ) -> NotificationChannelResponse | None:
         """
+        Get a single notification channel with the given parameters.
+
+        :param name: Filter down to notification channels with the given name
+        :type name: str, optional
+        :param name_exact: Only return channels whose names exactly match ``name``. By default,
+        the name matching is case insensitive.
+        :type name_exact: bool, optional
+        :param type: Filter to only notification channels of this type
+        :type type: str | ChannelType, optional
+        :param fetch: Fetch notification channels if they haven't been fetched yet.
+        :type fetch: bool, optional
+        :param async_req: ``True`` if you want to send the request asynchronously, in which case this
+        method will return a coroutine. Defaults to ``False``.
+        :type async_req: bool, optional
+
+        :return: A notification channel matching the given parameters, or ``None`` if none exists.
+        :rtype: NotificationChannelResponse | None
         """
         def pick(channels):
             if len(channels) > 1:
@@ -344,6 +424,7 @@ class Instance:
         refresh_token: Optional[str] = None,
         access_token_expires: Optional[datetime] = None,
         logger: Optional[logging.Logger] = None,
+        sync_config: bool = True,
     ) -> None:
         if profile is None:
             profile = os.getenv("LMK_PROFILE")
@@ -387,6 +468,7 @@ class Instance:
         self.refresh_token = refresh_token
         self.access_token_expires = access_token_expires
         self.server_url = server_url
+        self.sync_config = sync_config
 
         self._load_config()
 
@@ -419,6 +501,8 @@ class Instance:
             old_value=old_value,
             new_value=value,
         )
+        if self.sync_config:
+            self._save_config()
 
     @property
     def default_channel(self) -> Optional[str]:
@@ -555,16 +639,28 @@ class Instance:
         return self._get_access_token_sync()
 
     def logged_in(self) -> bool:
+        """
+        Check whether the client is currently logged in
+
+        :return: a boolean indicating if you are logged in or not
+        :rtype: bool
+        """
         return bool(self.access_token)
 
     def logout(self) -> None:
         """
-        Get rid of the current access token and remove it from
+        Get rid of the current access token. After calling this, you will
+        need to log in again in order to use methods that require authentication
+        such as ``notify()``
+
+        :return: This method does not return anything
+        :rtype: None
         """
         self.access_token = None
         self.refresh_token = None
         self.access_token_expires = None
-        self._save_config()
+        if self.sync_config:
+            self._save_config()
 
     def initiate_auth(
         self, scope: Optional[str] = None, async_req: bool = False
@@ -605,7 +701,6 @@ class Instance:
         access_token: str,
         refresh_token: Optional[str] = None,
         access_token_expires: Optional[datetime] = None,
-        save: bool = True,
     ) -> None:
         self.access_token = access_token
         self.refresh_token = refresh_token
@@ -614,7 +709,7 @@ class Instance:
             self.access_token_expires = int(
                 self.access_token_expires.timestamp() * 1000
             )
-        if save:
+        if self.sync_config:
             self._save_config()
 
     def login(
@@ -630,8 +725,26 @@ class Instance:
         a new auth session in a web browser. If not, it will print the
         auth URL and you will have to navigate to it in a browser manually
 
-        auth_mode: jupyter, browser, manual. Will choose the first of those
-        three that is available in the current context if None
+        :param auth_mode: ``jupyter``, ``browser`` or ``manual``. If ``None``, the first of those
+        three that is available in the current context will be chosen automatically.
+        :type auth_mode: str, optional
+        :param scope: If desired, you may manually specify scopes that the retrieved access token
+        should have, separated by spaces. If ``None``, all scopes will be requested. The user may
+        modify these scopes during the OAuth flow to make them more restrictive.
+        :type scope: str, optional
+        :param timeout: A float indicating how long the client should wait for authentication to
+        succeed before considering the authentication attempt failed.
+        :type timeout: float, optional
+        :param poll_interval: The poll interval for checking if the created authentication
+        session has succeeded.
+        :type poll_interval: float, optional
+        :param force: By default if you are already logged in, this method will simply
+        return immediately. By passing ``force=True``, you may force the client to replace
+        the current authentication information and log in again.
+        :type force: bool, optional
+
+        :return: This method does not return anything
+        :rtype: None
         """
         if self.logged_in() and not force:
             print("Already authenticated, pass force=True to re-authenticate")
@@ -688,6 +801,13 @@ class Instance:
     ) -> List[NotificationChannelResponse]:
         """
         List the notification channels that are available to send notifications to
+
+        :param async_req: ``True`` if you want to send the request asynchronously, in which case this
+        method will return a coroutine. Defaults to ``False``.
+        :type async_req: bool, optional
+
+        :return: A list of notification channels that the current client has access to.
+        :rtype: List[NotificationChannelResponse]
         """
         api = NotificationApi(self.client)
         return pipeline(async_req)(
@@ -708,7 +828,46 @@ class Instance:
         async_req: bool = False,
     ) -> EventResponse:
         """
-        Send a notification
+        Send a notification to one of your configured notification channels.
+
+        **Note:** This method requires you to be [logged in](#login) to LMK.
+        
+        <details><summary>Usage Example</summary>
+        <p>
+
+        ```python
+        import lmk
+
+        # Check that the client is logged in (optional)
+        # If using for the first time on a new device, call lmk.login()
+        assert lmk.logged_in()
+
+        lmk.notify("Hello, world!")
+        ```
+
+        </p>
+        </details>
+
+        :param message: The content of the notification you want to send
+        :type message: str
+        :param content_type: The MIME type of the message you want to send; ``text/plain`` and
+        ``text/markdown`` are supported. Defaults to ``text/markdown``
+        :type content_type: str, optional
+        :param notification_channels: A list of notification channel IDs or notification channel
+        objects that you want to send the notification to. If ``None`` and ``notify = True`` (the 
+        default), this will be sent to the default notification channel for your account, which is 
+        the primary email address associated with your account by default. Defaults to ``None``
+        :type notification_channels: List[str | NotificationChannelResponse], optional
+        :param notify: ``True`` if you want to send a notification to one or more of your configured
+        notification channels. If ``False``, this notification will only be visible via the LMK web app.
+        Defaults to ``True``
+        :type notify: bool, optional
+        :param async_req: ``True`` if you want to send the request asynchronously, in which case this
+        method will return a coroutine. Defaults to ``False``.
+        :type async_req: bool, optional
+
+        :return: The event object corresponding to the sent notification
+        :rtype: EventResponse
         """
         api = EventApi(self.client)
         kws = {}
@@ -743,6 +902,24 @@ class Instance:
         async_req: bool = False,
     ) -> SessionResponse:
         """
+        Create an interactive session, which you can use to remotely monitor a process
+        or Jupyter Notebook remotely via the LMK web app. You shouldn't have to use this
+        method directly in normal usage, rather it will be invoed by 
+        
+        **Note:** This method requires you to be [logged in](#login) to LMK.
+
+        :param name: The name of the session. This will appear in the LMK app.
+        :type name: str
+        :param state: The initial state parameters for the session. The ``type`` 
+        field is always required, but the rest of the required fields depend on what
+        type of session it is. See the REST API documentation for more information.
+        :type state: Dict[str, Any]
+        :param async_req: ``True`` if you want to send the request asynchronously, in which case this
+        method will return a coroutine. Defaults to ``False``.
+        :type async_req: bool, optional
+
+        :return: The session object corresponding to the created session.
+        :rtype: SessionResponse
         """
         api = SessionApi(self.client)
 
@@ -769,6 +946,18 @@ class Instance:
         async_req: bool = False,
     ) -> None:
         """
+        End an interactive session. After the session has been ended, its state cannot
+        be updated any more. Only call this when completely finished with using a session.
+
+        :param session_id: The ID of a previously created session that has not been ended
+        yet
+        :type session_id: str
+        :param async_req: ``True`` if you want to send the request asynchronously, in which case this
+        method will return a coroutine. Defaults to ``False``.
+        :type async_req: bool, optional
+
+        :return: This method does not return anything
+        :rtype: None
         """
         api = SessionApi(self.client)
 
@@ -783,6 +972,21 @@ class Instance:
     async def session_connect(
         self, session_id: str, read_only: bool = True
     ) -> AsyncContextManager[WebSocket]:
+        """
+        Connect via a web socket to an interactive session. This allows you to send state
+        updates to the session via a web socket, and receive remote state updates initiated
+        through the LMK web app or API calls from other clients.
+
+        :param session_id: the ID of a previously created session that has not been ended
+        yet.
+        :type session_id: str
+        :param read_only: Indicate whether to connect in "read only" mode. This means that
+        updates cannot be sent via the web socket, only received. Defaults to ``True``
+        :type read_only: bool, optional
+
+        :return: An asynchronous context manager yielding a ``WebSocket`` object
+        :rtype: AsyncContextManager[WebSocket]
+        """
         access_token = await self._get_access_token_async()
 
         url = self.client.configuration.host + f"/v1/session/ws?token={access_token}"

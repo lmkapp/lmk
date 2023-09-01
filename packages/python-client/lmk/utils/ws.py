@@ -23,7 +23,7 @@ ws_closed = signal("ws-closed")
 
 class WebSocket:
     """
-    Wrapper for aiohttp's web socket interface that supports retries
+    Wrapper for aiohttp's web socket interface that supports reconnecting on failures
     """
 
     def __init__(
@@ -100,7 +100,15 @@ class WebSocket:
         ws_closed.send(self)
 
     async def send(self, data: Any) -> None:
-        """ """
+        """
+        Send a message to the web socket
+
+        :param data: The data to send to the web socket. This must be JSON serializable.
+        :type data: Any
+
+        :return: This method does not return anything
+        :rtype: None
+        """
         future = asyncio.Future()
         await self.queue.put((data, future))
         await future
@@ -204,7 +212,12 @@ class WebSocket:
                 break
 
     async def __aiter__(self):
-        """ """
+        """
+        Iterate asynchronously through messages received by the web socket.
+
+        :return: An asynchronous iterator of messages received from the web socket.
+        :rtype: AsyncIterator[Any]
+        """
         self._check_state(True)
 
         async for item in self._iterate_with_retry():

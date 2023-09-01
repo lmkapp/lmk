@@ -10,24 +10,25 @@ Make sure you've installed the `jupyter` extras for the package:
 pip install "lmk-python[jupyter]"
 ```
 
+Or from within a Jupyter notebook:
+```bash
+!pip install "lmk-python[jupyter]"
+```
+
 :::
 
-To monitor your jupyter notebooks with LMK:
-
-1. Ensure that you have the `lmk-python` package installed in your jupyter notebook. You can run the following in a jupyter notebook cell to install it if:
-```
-!pip install lmk-python
-```
-
-2. Run the following code in a new cell:
+To monitor your jupyter notebooks with LMK, simply run the following code in a new cell:
 ```python
 import lmk
+
+# This assumes this is the last line in the cell you are running.
+# If it is not, use `display(lmk.jupyter)` instead
 lmk.jupyter
 ```
 
-3. That's it! You should see the LMK jupyter widget. You'll be prompted to authorize the app, which will allow you to log in or sign up if you don't have an existing LMK account. You'll need an account to use LMK, but you'll only have to pay if you want to send yourself notifications after your 30 day trial.
+That's it! You should see the LMK jupyter widget. You'll be prompted to authorize the app, which will allow you to log in or sign up if you don't have an existing LMK account. You'll need an account to use LMK, but you'll only have to pay if you want to send yourself notifications after your 30 day trial.
 
-## Cell Magic
+## `lmk` Cell Magic
 
 When you import `lmk`, There is an `lmk` jupyter cell magic that is automatically registered that can be used to automatically enable monitoring when a cell starts to run. It can be used as follows:
 

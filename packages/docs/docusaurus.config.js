@@ -106,7 +106,7 @@ const config = {
             position: 'right'
           },
           {
-            href: 'https://github.com/cfeenstra67/lmk',
+            href: 'https://github.com/lmkapp/lmk',
             label: 'GitHub',
             position: 'right',
           },
