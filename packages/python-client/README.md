@@ -106,7 +106,7 @@ Install from test index:
 pip install --extra-index-url https://test.pypi.org/simple/ 'lmkapp[jupyter]==<version>'
 ```
 
-Publish to real idnex:
+Publish to real index:
 ```bash
 pnpm pypi-upload
 ```

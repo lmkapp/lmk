@@ -482,13 +482,17 @@ class Instance:
         )
         self.channels = Channels(self)
 
-        self.sync_config = sync_config
+        # Set this to False before loading initial values so that we
+        # don't overwrite things.
+        self.sync_config = False
+
         self.profile = profile
         self.config_path = config_path
         self.access_token = access_token
         self.refresh_token = refresh_token
         self.access_token_expires = access_token_expires
         self.server_url = server_url
+        self.sync_config = sync_config
 
         self._load_config()
 
@@ -552,10 +556,7 @@ class Instance:
 
         parser = configparser.ConfigParser()
         if self.config_path is None:
-            config_paths = [
-                "./.lmk",
-                os.path.expanduser("~/.lmk/config"),
-            ]
+            config_paths = [os.path.expanduser("~/.lmk/config")]
         elif not os.path.isfile(self.config_path):
             raise exc.ConfigFileNotFound(self.config_path)
         else:
