@@ -45,10 +45,12 @@ version = "0.1.0"
 cli = ["click<9"]
 jupyter = [
     "ipywidgets>=7.0.0",
-    "ipython>=6.1.0"
+    "ipython>=6.1.0",
+    "ipykernel"
 ]
-dev = ["black", "bump2version", "jupyterlab", "tox>=4.0", "pytest~=7.4.0"]
-publish = ["build", "twine"]
+dev = ["black", "bump2version", "jupyterlab", "tox>=4.0"]
+test = ["pytest~=7.4.0"]
+publish = ["build>=1.0.0", "twine"]
 docs = ["novella~=0.2.6", "pydoc-markdown[novella]~=4.8.2"]
 
 [project.urls]

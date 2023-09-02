@@ -103,7 +103,7 @@ pnpm pypi-upload-test
 
 Install from test index:
 ```bash
-pip install --extra-index-url https://test.pypi.org/simple/ lmk-python[jupyter]==<version>
+pip install --extra-index-url https://test.pypi.org/simple/ 'lmkapp[jupyter]==<version>'
 ```
 
 Publish to real idnex:
@@ -120,5 +120,5 @@ pnpm build:publish
 
 Publish the npm package:
 ```bash
-pnpm publish --access public
+pnpm npm-publish
 ```

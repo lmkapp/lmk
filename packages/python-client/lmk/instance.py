@@ -515,7 +515,7 @@ class Instance:
         if value == self.server_url:
             return
         old_value, self._server_url = self._server_url, value
-        self.client.configuration.host = value
+        self.client.configuration.host = value or API_URL
         server_url_changed.send(
             self,
             old_value=old_value,
@@ -843,7 +843,9 @@ class Instance:
         self,
         message: str,
         content_type: str = "text/markdown",
-        notification_channels: Optional[List[Union[str, NotificationChannelResponse]]] = None,
+        notification_channels: Optional[
+            List[Union[str, NotificationChannelResponse]]
+        ] = None,
         notify: bool = True,
         async_req: bool = False,
     ) -> EventResponse:

@@ -20,3 +20,7 @@ def test_top_level_methods():
     assert callable(lmk.logged_in)
     assert callable(lmk.login)
     assert callable(lmk.logout)
+
+
+def test_jupyter():
+    assert lmk.jupyter.get_widget()
