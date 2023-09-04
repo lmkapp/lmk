@@ -9,7 +9,7 @@ from lmk.jupyter import (
     _jupyter_nbextension_paths,
 )
 
-__version__ = "0.1.2"
+__version__ = "0.1.2.dev0"
 
 __all__ = [
     "__version__",

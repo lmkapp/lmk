@@ -39,7 +39,7 @@ dependencies = [
     "urllib3<2",
     "aiohttp<4"
 ]
-version = "0.1.2"
+version = "0.1.2.dev0"
 
 [project.optional-dependencies]
 cli = ["click<9"]
