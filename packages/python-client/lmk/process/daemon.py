@@ -1,22 +1,23 @@
 import asyncio
 import contextlib
-import logging
 import json
+import logging
 import multiprocessing
 import os
 import shlex
 import signal
 import socket
 import textwrap
-from datetime import datetime
 from functools import wraps
-from typing import Optional, Callable, List, Any
+from typing import Optional, Callable, Any
 
 from aiohttp import web
 
 from lmk.generated.models.session_response import SessionResponse
 from lmk.generated.models.process_session_state import ProcessSessionState
 from lmk.instance import get_instance
+from lmk.process.manager import JobManager
+from lmk.process.models import Job
 from lmk.process.monitor import ProcessMonitor, MonitoredProcess
 from lmk.utils import setup_logging, socket_exists, read_last_lines
 
@@ -55,34 +56,24 @@ class ProcessMonitorController:
     def __init__(
         self,
         job_name: str,
-        target_pid: int,
         monitor: ProcessMonitor,
-        output_dir: str,
-        notify_on: str = "none",
-        channel_id: Optional[str] = None,
+        manager: JobManager,
     ) -> None:
         self.job_name = job_name
-        self.target_pid = target_pid
+        self.manager = manager
         self.monitor = monitor
-        self.notify_on = notify_on
-        self.channel_id = channel_id
-        self.output_dir = output_dir
         self.hostname = socket.gethostname()
 
         self.done_event = asyncio.Event()
         self.attached_event = asyncio.Event()
         self.update_event = asyncio.Event()
-        self.error: Optional[Exception] = None
-        self.started_at: Optional[datetime] = None
-        self.exit_code: Optional[int] = None
         self.session: Optional[SessionResponse] = None
-        self.target_command: Optional[List[str]] = None
         self.process: Optional[MonitoredProcess] = None
 
-    def _should_notify(self, exit_code: int) -> bool:
-        if self.notify_on == "error":
-            return exit_code != 0
-        if self.notify_on == "stop":
+    def _should_notify(self, job: Job) -> bool:
+        if job.notify_on == "error":
+            return job.exit_code != 0
+        if job.notify_on == "stop":
             return True
         return False
 
@@ -96,13 +87,15 @@ class ProcessMonitorController:
         if not attached_set:
             await self.attached_event.wait()
 
-            if self.error is not None:
+            job = await self.manager.get_job(self.job_name)
+
+            if job.error is not None:
                 await ws.send_json(
                     {
                         "ok": False,
                         "stage": "attach",
-                        "error_type": type(self.error).__name__,
-                        "error": str(self.error),
+                        "error_type": job.error_type,
+                        "error": job.error,
                     }
                 )
                 await ws.close()
@@ -114,35 +107,29 @@ class ProcessMonitorController:
             return ws
 
         await self.done_event.wait()
+        job = await self.manager.get_job(self.job_name)
 
-        if self.error is not None:
+        if job.error is not None:
             await ws.send_json(
                 {
                     "ok": False,
                     "stage": "run",
-                    "error_type": type(self.error).__name__,
-                    "error": str(self.error),
+                    "error_type": job.error_type,
+                    "error": job.error,
                 }
             )
             await ws.close()
             return ws
 
-        await ws.send_json({"ok": True, "stage": "run", "exit_code": self.exit_code})
+        await ws.send_json({"ok": True, "stage": "run", "exit_code": job.exit_code})
         await ws.close()
         return ws
 
     @route_handler
-    async def _get_status(self, request: web.Request) -> web.Response:
-        return web.json_response(
-            {
-                "job_name": self.job_name,
-                "pid": self.target_pid,
-                "command": self.target_command,
-                "notify_on": self.notify_on,
-                "channel_id": self.channel_id,
-                "started_at": self.started_at.isoformat(),
-            }
-        )
+    async def _handle_update(self, request: web.Request) -> web.Response:
+        self.update_event.set()
+
+        return web.json_response({"ok": True})
 
     @route_handler
     async def _send_signal(self, request: web.Request) -> web.Response:
@@ -155,14 +142,6 @@ class ProcessMonitorController:
 
         return web.json_response({"ok": True})
 
-    @route_handler
-    async def _set_notify_on(self, request: web.Request) -> web.Response:
-        body = await request.json()
-        self.notify_on = body["notify_on"]
-        self.update_event.set()
-
-        return web.json_response({"ok": True})
-
     async def _handle_session_action(self, action: str, body: Optional[Any]) -> None:
         if action == "sendSignal":
             await self.send_signal(body["signal"])
@@ -172,19 +151,21 @@ class ProcessMonitorController:
     @contextlib.asynccontextmanager
     async def _session_ctx(self) -> None:
         instance = get_instance()
+        job = await self.manager.get_job(self.job_name)
         self.session = await instance.create_session(
             self.job_name,
             ProcessSessionState(
                 type="process",
                 hostname=self.hostname,
-                command=shlex.join(self.target_command),
-                pid=self.target_pid,
-                notifyOn=self.notify_on,
-                notifyChannel=self.channel_id,
+                command=shlex.join(json.loads(job.command)),
+                pid=job.pid,
+                notifyOn=job.notify_on,
+                notifyChannel=job.channel_id,
             ),
             async_req=True,
         )
         LOGGER.info("Created session: %s", self.session.session_id)
+        await self.manager.update_job(self.job_name, session_id=self.session.session_id)
 
         async with instance.session_connect(self.session.session_id, False) as ws:
             LOGGER.debug("Connected to session: %s", self.session.session_id)
@@ -197,24 +178,26 @@ class ProcessMonitorController:
                         [update_task, done_task], return_when=asyncio.FIRST_COMPLETED
                     )
 
+                    job = await self.manager.get_job(self.job_name)
+
                     if update_task.done():
                         self.update_event.clear()
                         await ws.send(
                             {
-                                "notifyOn": self.notify_on,
-                                "notifyChannel": self.channel_id,
+                                "notifyOn": job.notify_on,
+                                "notifyChannel": job.channel_id,
                             }
                         )
 
                     if done_task.done():
                         LOGGER.info(
-                            "Sending session exit message; exit code %s", self.exit_code
+                            "Sending session exit message; exit code %s", job.exit_code
                         )
                         await ws.send(
                             {
-                                "notifyOn": self.notify_on,
-                                "notifyChannel": self.channel_id,
-                                "exitCode": self.exit_code,
+                                "notifyOn": job.notify_on,
+                                "notifyChannel": job.channel_id,
+                                "exitCode": job.exit_code,
                             }
                         )
                         LOGGER.info("Sent message")
@@ -229,11 +212,14 @@ class ProcessMonitorController:
                         continue
                     msg_type = message["message"]["type"]
                     if msg_type == "update":
-                        self.notify_on = message["message"]["session"]["state"][
-                            "notifyOn"
-                        ]
-                        self.channel_id = message["message"]["session"]["state"].get(
-                            "notifyChannel"
+                        await self.manager.update_job(
+                            self.job_name,
+                            notify_on=message["message"]["session"]["state"][
+                                "notifyOn"
+                            ],
+                            channel_id=message["message"]["session"]["state"].get(
+                                "notifyChannel"
+                            ),
                         )
                     elif msg_type == "action":
                         try:
@@ -258,16 +244,15 @@ class ProcessMonitorController:
                 await instance.end_session(self.session.session_id, async_req=True)
 
     async def _run_server(self) -> None:
-        socket_path = os.path.join(self.output_dir, "daemon.sock")
+        socket_path = self.manager.socket_file(self.job_name)
 
         app = web.Application()
 
         app.add_routes(
             [
-                web.get("/status", self._get_status),
                 web.get("/wait", self._wait_websocket),
                 web.post("/signal", self._send_signal),
-                web.post("/set-notify-on", self._set_notify_on),
+                web.post("/update", self._handle_update),
             ]
         )
 
@@ -288,23 +273,24 @@ class ProcessMonitorController:
 
     async def _run_command(self, log_path: str, log_level: str) -> None:
         async with contextlib.AsyncExitStack() as stack:
-            output_path = os.path.join(self.output_dir, "output.log")
+            output_path = self.manager.output_file(self.job_name)
+            job = await self.manager.get_job(self.job_name)
 
-            exit_code = -1
-            error_type, error = None, None
             try:
                 # Create the output file
                 with open(output_path, "wb+") as f:
                     pass
 
                 self.process = await self.monitor.attach(
-                    self.target_pid,
                     output_path,
                     log_path,
                     log_level,
                 )
-                self.target_pid = self.process.pid
-                self.target_command = self.process.command
+                await self.manager.update_job(
+                    self.job_name,
+                    pid=self.process.pid,
+                    command=self.process.command,
+                )
                 self.attached_event.set()
 
                 await stack.enter_async_context(self._session_ctx())
@@ -312,38 +298,37 @@ class ProcessMonitorController:
                 LOGGER.debug("Entered session context: %s", self.session.session_id)
 
                 exit_code = await self.process.wait()
+                job = await self.manager.end_job(
+                    self.job_name,
+                    exit_code=exit_code,
+                )
             except Exception as err:
-                self.error = err
+                job = await self.manager.end_job(self.job_name, exit_code=-1, error=err)
                 if not self.attached_event.is_set():
                     self.attached_event.set()
 
-                error_type = type(err).__name__
-                error = str(err)
                 LOGGER.exception(
                     "%d: %s monitor raised exception",
-                    self.target_pid,
+                    job.pid,
                     type(self.monitor).__name__,
                 )
-                should_notify = self._should_notify(exit_code)
             else:
-                LOGGER.info("%d: exited with code %d", self.target_pid, exit_code)
-                should_notify = self._should_notify(exit_code)
+                LOGGER.info("%d: exited with code %d", job.pid, job.exit_code)
+            finally:
+                should_notify = self._should_notify(job)
 
-            ended_at = datetime.utcnow()
-            self.exit_code = exit_code
-            self.process = None
             self.done_event.set()
 
             notify_status = "none"
             if not should_notify:
                 LOGGER.info(
-                    "Not sending notification. Current notify on: %s", self.notify_on
+                    "Not sending notification. Current notify on: %s", job.notify_on
                 )
             else:
                 LOGGER.info(
                     "Sending notification to channel %s. Current notify on: %s",
-                    self.channel_id or "default",
-                    self.notify_on,
+                    job.channel_id or "default",
+                    job.notify_on,
                 )
                 instance = get_instance()
                 try:
@@ -351,13 +336,13 @@ class ProcessMonitorController:
                         f"""
                         Process exited with code **{exit_code}**:
                         ```bash
-                        {shlex.join(self.target_command) if self.target_command else "<unknown>"}
+                        {shlex.join(json.loads(job.command)) if job.command else "<unknown>"}
                         ```
                         Process ran on `{self.hostname}`
 
-                        Started: {self.started_at.isoformat()}
+                        Started: {job.started_at.isoformat()}
                         
-                        Ended: {ended_at.isoformat()}
+                        Ended: {job.ended_at.isoformat()}
                         """
                     ).strip()
 
@@ -368,36 +353,17 @@ class ProcessMonitorController:
 
                     await instance.notify(
                         message,
-                        notification_channels=[self.channel_id]
-                        if self.channel_id
-                        else None,
+                        notification_channels=job.channel_id and [job.channel_id],
                         async_req=True,
                     )
                     notify_status = "success"
                 except Exception:
                     LOGGER.exception(
-                        "Failed to send notification to channel %s.", self.channel_id
+                        "Failed to send notification to channel %s.", job.channel_id
                     )
                     notify_status = "failed"
 
-            result_path = os.path.join(self.output_dir, "result.json")
-            with open(result_path, "w+") as f:
-                json.dump(
-                    {
-                        "job_name": self.job_name,
-                        "pid": self.target_pid,
-                        "command": self.target_command,
-                        "exit_code": exit_code,
-                        "error_type": error_type,
-                        "error": error,
-                        "notify_status": notify_status,
-                        "notify_on": self.notify_on,
-                        "channel_id": self.channel_id,
-                        "started_at": self.started_at.isoformat(),
-                        "ended_at": ended_at.isoformat(),
-                    },
-                    f,
-                )
+            await self.manager.update_job(self.job_name, notify_status=notify_status)
 
     async def send_signal(self, signum: int) -> None:
         if self.process is None:
@@ -405,7 +371,7 @@ class ProcessMonitorController:
         await self.process.send_signal(signum)
 
     async def run(self, log_path: str, log_level: str) -> None:
-        self.started_at = datetime.utcnow()
+        await self.manager.start_job(self.job_name)
 
         tasks = []
         tasks.append(asyncio.create_task(self._run_server()))
@@ -429,13 +395,15 @@ class ProcessMonitorDaemon(multiprocessing.Process):
 
     def __init__(
         self,
-        controller: ProcessMonitorController,
-        pid_file: str,
+        job_name: str,
+        monitor: ProcessMonitor,
+        base_path: Optional[str] = None,
         log_level: str = "INFO",
     ) -> None:
         super().__init__(daemon=False)
-        self.controller = controller
-        self.pid_file = pid_file
+        self.job_name = job_name
+        self.monitor = monitor
+        self.base_path = base_path
         self.log_level = log_level
 
     def run(self) -> None:
@@ -447,17 +415,21 @@ class ProcessMonitorDaemon(multiprocessing.Process):
         # signals
         os.setsid()
 
+        manager = JobManager(self.base_path)
+        controller = ProcessMonitorController(self.job_name, self.monitor, manager)
+
         try:
-            log_path = os.path.join(self.controller.output_dir, "lmk.log")
+            log_path = manager.log_file(self.job_name)
+            pid_file = manager.pid_file(self.job_name)
             with open(log_path, "a+") as log_stream:
                 setup_logging(log_stream=log_stream, level=self.log_level)
 
-                with pid_ctx(self.pid_file, self.pid):
+                with pid_ctx(pid_file, self.pid):
                     loop = asyncio.new_event_loop()
 
                     try:
                         loop.run_until_complete(
-                            self.controller.run(log_path, self.log_level)
+                            controller.run(log_path, self.log_level)
                         )
                     finally:
                         loop.run_until_complete(loop.shutdown_asyncgens())
@@ -465,7 +437,3 @@ class ProcessMonitorDaemon(multiprocessing.Process):
         except:
             LOGGER.exception("Error running process monitor daemon")
             raise
-
-
-class ProcessNotAttached(Exception):
-    """ """

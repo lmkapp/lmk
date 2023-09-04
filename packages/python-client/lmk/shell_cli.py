@@ -1,3 +1,4 @@
+import asyncio
 import psutil
 import shlex
 import sys
@@ -36,7 +37,7 @@ def format_params(values: Dict[str, Any], params: List[click.Parameter]) -> List
     return out
 
 
-def process_cmd(
+async def process_cmd(
     ctx: click.Context,
     root_args: List[str],
 ) -> Dict[str, Any]:
@@ -54,7 +55,8 @@ def process_cmd(
                 name = proc.cmdline()[0]
 
             if sub_ctx.params["job"] is None:
-                job_id = manager.create_job(name).job_id
+                job = await manager.create_job(name)
+                job_id = job.name
             else:
                 job_id = sub_ctx.params["job"]
 
@@ -88,11 +90,11 @@ def process_cmd(
             print("LASTCMD", shlex.join(out_args))
 
 
-def main(args: List[str]) -> int:
+async def main(args: List[str]) -> int:
     try:
         with cli.make_context("lmk", args=args) as ctx:
             out_args = format_params(ctx.params, cli.get_params(ctx))
-            process_cmd(ctx, out_args)
+            await process_cmd(ctx, out_args)
             return 0
     except click.exceptions.Abort:
         click.echo("Aborted!", file=sys.stderr)
@@ -105,4 +107,4 @@ def main(args: List[str]) -> int:
 
 
 if __name__ == "__main__":
-    sys.exit(main(sys.argv[1:]))
+    sys.exit(asyncio.run(main(sys.argv[1:])))

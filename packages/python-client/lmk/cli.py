@@ -8,10 +8,10 @@ import textwrap
 from typing import List, Optional
 
 from lmk.instance import get_instance
+from lmk.process import exc
 from lmk.process.attach import attach_interactive
 from lmk.process.child_monitor import ChildMonitor
-from lmk.process.client import send_signal, set_notify_on
-from lmk.process.daemon import ProcessMonitorController
+from lmk.process.client import send_signal, update_job
 from lmk.process.lldb_monitor import LLDBProcessMonitor
 from lmk.process.manager import JobManager
 from lmk.process.run import run_foreground, run_daemon
@@ -23,9 +23,15 @@ from lmk.shell_plugin import (
     resolve_pid,
     get_shell_cli_script,
 )
-from lmk.utils.click import async_command
+from lmk.utils.click import async_command, async_group
 from lmk.utils.decorators import stack_decorators
 from lmk.utils.logging import setup_logging
+
+
+def _check_login() -> None:
+    instance = get_instance()
+    if not instance.logged_in():
+        raise exc.NotLoggedIn()
 
 
 cli_args = stack_decorators(
@@ -41,7 +47,7 @@ cli_args = stack_decorators(
 )
 
 
-@click.group(
+@async_group(
     help=(
         "The LMK Command Line Interface. This allows you to monitor command-line processes remotely "
         "via the LMK web app."
@@ -49,11 +55,15 @@ cli_args = stack_decorators(
 )
 @cli_args
 @click.pass_context
-def cli(ctx: click.Context, log_level: str, base_path: str):
+async def cli(ctx: click.Context, log_level: str, base_path: str):
     setup_logging(level=log_level)
     ctx.ensure_object(dict)
     ctx.obj["log_level"] = log_level
-    ctx.obj["manager"] = JobManager(base_path)
+
+    manager = JobManager(base_path)
+    await manager.setup()
+
+    ctx.obj["manager"] = manager
 
 
 @cli.command(
@@ -156,34 +166,25 @@ async def run(
     if name is None:
         name = command[0]
 
-    manager = ctx.obj["manager"]
-    job = manager.create_job(name)
-    click.secho(f"Job ID: {job.job_id}", fg="green", bold=True)
+    _check_login()
+
+    manager: JobManager = ctx.obj["manager"]
+    job = await manager.create_job(name, notify)
+    click.secho(f"Job ID: {job.name}", fg="green", bold=True)
 
     monitor = ChildMonitor(command)
-    controller = ProcessMonitorController(job.job_id, -1, monitor, job.job_dir, notify)
 
     if daemon:
-        await run_daemon(job, controller, ctx.obj["log_level"])
+        await run_daemon(job.name, monitor, manager, ctx.obj["log_level"])
         if attach:
-            exit_code = await attach_interactive(job.job_dir)
+            exit_code = await attach_interactive(job.name, manager)
             sys.exit(exit_code or 0)
     else:
-        await run_foreground(job, controller, ctx.obj["log_level"], attach)
+        await run_foreground(job.name, monitor, manager, ctx.obj["log_level"], attach)
 
 
 monitor_args = stack_decorators(
-    click.argument(
-        "pid",
-        # help=(
-        #     "PID of the process that you'd like to monitor. If you are using the shell plugin "
-        #     "you can use bash jobs syntax e.g. %1. See the `shell-plugin` command for details. "
-        #     "Note that if you use jobs syntax, the process will be disowned by your terminal, "
-        #     "so if you close your terminal it will continue to run. Use the `lmk kill` command "
-        #     "to interrupt or terminate a job that you've monitored via this command, or interrupt "
-        #     "it via the LMK web app."
-        # )
-    ),
+    click.argument("pid"),
     attach_option,
     name_option,
     notify_on_option(),
@@ -216,23 +217,25 @@ async def monitor(
         proc = psutil.Process(pid)
         name = proc.cmdline()[0]
 
+    _check_login()
+
     if job is None:
-        job_obj = manager.create_job(name)
+        job_obj = await manager.create_job(name, notify)
     else:
-        job_obj = manager.get_not_started_job(job)
+        job_obj = await manager.get_job(job, not_started=True)
+        if job_obj is None:
+            raise exc.JobNotFound(job)
+        if notify != job_obj.notify_on:
+            await manager.update_job(job, notify_on=notify)
 
-    click.secho(f"Job ID: {job_obj.job_id}", fg="green", bold=True)
+    click.secho(f"Job ID: {job_obj.name}", fg="green", bold=True)
 
-    monitor = LLDBProcessMonitor()
+    monitor = LLDBProcessMonitor(pid)
 
-    controller = ProcessMonitorController(
-        job_obj.job_id, pid, monitor, job_obj.job_dir, notify
-    )
-
-    await run_daemon(job_obj, controller, ctx.obj["log_level"])
+    await run_daemon(job_obj.name, monitor, manager, ctx.obj["log_level"])
 
     if attach:
-        exit_code = await attach_interactive(job_obj.job_dir)
+        exit_code = await attach_interactive(job_obj.name, manager)
         sys.exit(exit_code or 0)
 
 
@@ -244,27 +247,26 @@ async def monitor(
         "detach from or interrupt the job while attached."
     ),
 )
-@click.argument(
-    "job_id",
-    # help="ID of a job that you'd like to attach to. Use the `lmk jobs` command to list running jobs."
-)
+@click.argument("job_id")
 @click.pass_context
 async def attach(ctx: click.Context, job_id: str):
-    manager = ctx.obj["manager"]
+    manager: JobManager = ctx.obj["manager"]
     job = await manager.get_job(job_id)
 
-    if not job.running:
-        click.secho(f"Job is not running: {job_id}", fg="red")
-        raise click.Abort
+    if job is None:
+        raise exc.JobNotFound(job_id)
 
-    exit_code = await attach_interactive(job.job_dir)
+    if not job.is_running():
+        raise exc.JobNotRunning(job_id)
+
+    exit_code = await attach_interactive(job.name, manager)
     sys.exit(exit_code or 0)
 
 
-def pad(value: str, length: int, character: str = " ") -> str:
+def pad(value: str, length: int, character: str = " ", **style_kwargs) -> str:
     if len(value) > length:
         return value[: length - 3] + "..."
-    return value + character * (length - len(value))
+    return click.style(value + character * (length - len(value)), **style_kwargs)
 
 
 @async_command(cli, help="List jobs monitored by LMK")
@@ -276,27 +278,58 @@ def pad(value: str, length: int, character: str = " ") -> str:
 )
 @click.pass_context
 async def jobs(ctx: click.Context, all: bool):
-    manager = ctx.obj["manager"]
-    if all:
-        job_ids = manager.get_all_job_ids()
-        jobs = manager.get_jobs(job_ids)
-    else:
-        jobs = manager.list_running_jobs()
+    manager: JobManager = ctx.obj["manager"]
+    jobs = await manager.list_jobs(running_only=not all)
 
-    print(
-        pad("id", 30),
-        pad("pid", 10),
-        pad("status", 12),
-        pad("notify", 10),
-        pad("started", 30),
+    if not jobs:
+        click.echo("No jobs found")
+        return
+
+    click.echo(
+        " ".join(
+            [
+                pad("name", 30, bold=True),
+                pad("pid", 10, bold=True),
+                pad("status", 12, bold=True),
+                pad("notify", 10, bold=True),
+                pad("started", 30, bold=True),
+            ]
+        )
     )
-    async for job in jobs:
-        print(
-            pad(str(job.job_id), 30),
-            pad(str(job.target_pid), 10),
-            pad("running    " if job.running else "not-running", 12),
-            pad(job.notify_on, 10),
-            pad(job.started_at.isoformat(), 30),
+    for job in jobs:
+        state_kwargs = {}
+        if job.ended_at:
+            exit_str = job.exit_code if job.exit_code is not None else "?"
+            if job.exit_code == 0:
+                state_kwargs = {"fg": "yellow"}
+            else:
+                state_kwargs = {"fg": "red"}
+            state = f"exited ({exit_str})"
+        elif job.started_at:
+            state = "running"
+            state_kwargs = {"fg": "green", "bold": True}
+        else:
+            state = "not-started"
+
+        notify_on = ""
+        notify_on_kwargs = {}
+        if job.notify_on == "stop":
+            notify_on = "stop"
+            notify_on_kwargs = {"fg": "yellow"}
+        elif job.notify_on == "error":
+            notify_on = "error"
+            notify_on_kwargs = {"fg": "red"}
+
+        click.echo(
+            " ".join(
+                [
+                    pad(job.name, 30, bold=True),
+                    pad(str(job.pid), 10),
+                    pad(state, 12, **state_kwargs),
+                    pad(notify_on, 10, **notify_on_kwargs),
+                    pad(job.started_at.isoformat(), 30),
+                ]
+            )
         )
 
 
@@ -305,21 +338,20 @@ async def jobs(ctx: click.Context, all: bool):
     short_help="Send a signal to a monitored job",
     help="Send a signal to a monitored job to interrupt or terminate it.",
 )
-@click.argument(
-    "job_id",
-    # help="ID of the job you'd like to kill. Use `lmk jobs` to list running jobs."
-)
+@click.argument("job_id")
 @click.option(
     "-s", "--signal", default="SIGINT", help="Signal to send, defaults to SIGINT"
 )
 @click.pass_context
 async def kill(ctx: click.Context, job_id: str, signal: str):
-    manager = ctx.obj["manager"]
+    manager: JobManager = ctx.obj["manager"]
     job = await manager.get_job(job_id)
 
-    if not job.running:
-        click.secho(f"Job is not running: {job_id}", fg="red")
-        raise click.Abort
+    if job is None:
+        raise exc.JobNotFound(job_id)
+
+    if not job.is_running():
+        raise exc.JobNotRunning(job_id)
 
     if signal.isdigit():
         signal_value = int(signal)
@@ -334,8 +366,7 @@ async def kill(ctx: click.Context, job_id: str, signal: str):
         click.secho(f"Invalid signal value: {signal}", fg="red", bold=True)
         raise click.Abort
 
-    socket_path = os.path.join(job.job_dir, "daemon.sock")
-    await send_signal(socket_path, signal_value)
+    await send_signal(manager.socket_file(job.name), signal_value)
 
 
 @async_command(
@@ -347,22 +378,21 @@ async def kill(ctx: click.Context, job_id: str, signal: str):
         "if it's currently configured to send you a notification."
     ),
 )
-@click.argument(
-    "job_id",
-    # help="ID of the running job to set the `notify_on` value for; use `lmk jobs` to list running jobs"
-)
+@click.argument("job_id")
 @notify_on_option("stop")
 @click.pass_context
 async def notify(ctx: click.Context, job_id: str, notify: str) -> None:
-    manager = ctx.obj["manager"]
+    manager: JobManager = ctx.obj["manager"]
     job = await manager.get_job(job_id)
 
-    if not job.running:
-        click.secho(f"Job is not running: {job_id}", fg="red")
-        raise click.Abort
+    if job is None:
+        raise exc.JobNotFound(job_id)
 
-    socket_path = os.path.join(job.job_dir, "daemon.sock")
-    await set_notify_on(socket_path, notify)
+    if not job.is_running():
+        raise exc.JobNotRunning(job_id)
+
+    await manager.update_job(job.name, notify_on=notify)
+    await update_job(manager.socket_file(job.name))
 
 
 @cli.command(

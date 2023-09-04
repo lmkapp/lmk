@@ -97,8 +97,11 @@ class LLDBMonitoredProcess(MonitoredProcess):
 
 
 class LLDBProcessMonitor(ProcessMonitor):
+    def __init__(self, pid: int) -> None:
+        self.pid = pid
+
     async def attach(
-        self, pid: int, output_path: str, log_path: str, log_level: str
+        self, output_path: str, log_path: str, log_level: str
     ) -> MonitoredProcess:
         log_file = open(log_path, "ab+", buffering=0)
 
@@ -106,7 +109,7 @@ class LLDBProcessMonitor(ProcessMonitor):
             pass
 
         process = await run_with_lldb(
-            [MONITOR_SCRIPT_PATH, "-l", log_level, str(pid), output_path],
+            [MONITOR_SCRIPT_PATH, "-l", log_level, str(self.pid), output_path],
             log_file,
         )
         wait_task = asyncio.create_task(process.wait())
@@ -130,6 +133,6 @@ class LLDBProcessMonitor(ProcessMonitor):
 
         LOGGER.info("Process attached")
 
-        command = psutil.Process(pid).cmdline()
+        command = psutil.Process(self.pid).cmdline()
 
-        return LLDBMonitoredProcess(process, pid, command, log_file)
+        return LLDBMonitoredProcess(process, self.pid, command, log_file)

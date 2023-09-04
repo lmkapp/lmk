@@ -48,6 +48,15 @@ class MonitoredChildProcess(MonitoredProcess):
                     output_ready = asyncio.create_task(wait_for_fd(self.output_fd))
 
             output_ready.cancel()
+            os.set_blocking(self.output_fd, False)
+
+            # Flush any remaining output
+            while True:
+                try:
+                    output = os.read(self.output_fd, 1000)
+                except BlockingIOError:
+                    break
+                output_file.write(output)
 
             return wait.result()
 
@@ -62,7 +71,6 @@ class ChildMonitor(ProcessMonitor):
 
     async def attach(
         self,
-        pid: int,
         output_path: str,
         log_path: str,
         log_level: str,
