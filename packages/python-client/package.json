@@ -1,6 +1,6 @@
 {
   "name": "@lmkapp/jupyter-widget",
-  "version": "0.1.0",
+  "version": "0.1.2.dev0",
   "description": "Jupyter Widget for using LMK in a jupyter notebook",
   "keywords": [
     "jupyter",
@@ -58,13 +58,14 @@
     "watch:nbextension": "webpack --watch --mode=development",
     "watch:labextension": "jupyter labextension watch .",
     "install-all": "pnpm install && venv/bin/pip install -e '.[dev,publish,jupyter]'",
-    "prepublishOnly": "pnpm readme:npm",
-    "postpack": "pnpm readme:git",
     "readme:npm": "mv README.md git.README.md && mv npm.README.md README.md",
     "readme:git": "mv README.md npm.README.md && mv git.README.md README.md",
-    "pypi-check": "twine check dist/lmk_*",
-    "pypi-upload-test": "twine upload --repository-url https://test.pypi.org/legacy/ dist/lmk_*",
-    "pypi-upload": "twine upload dist/lmk_*"
+    "pypi-check": "twine check dist/lmkapp-*",
+    "pypi-upload-test": "twine upload --repository-url https://test.pypi.org/legacy/ dist/lmkapp-*",
+    "pypi-upload": "twine upload dist/lmkapp-*",
+    "test:python": "venv/bin/py.test -vv tests",
+    "tox": "venv/bin/tox",
+    "npm-publish": "pnpm readme:npm && pnpm publish --access public --no-git-checks; pnpm readme:git"
   },
   "dependencies": {
     "@jupyter-widgets/base": "^1.1.10 || ^2 || ^3 || ^4 || ^5 || ^6",

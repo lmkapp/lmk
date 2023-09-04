@@ -7,7 +7,7 @@ requires = [
 build-backend = "hatchling.build"
 
 [project]
-name = "lmk-python"
+name = "lmkapp"
 description = "Notifications you want, when you want them"
 license = {file = "LICENSE.txt"}
 readme = "README.md"
@@ -39,20 +39,22 @@ dependencies = [
     "urllib3<2",
     "aiohttp<4"
 ]
-version = "0.1.0"
+version = "0.1.2.dev0"
 
 [project.optional-dependencies]
 cli = ["click<9"]
 jupyter = [
     "ipywidgets>=7.0.0",
-    "ipython>=6.1.0"
+    "ipython>=6.1.0",
+    "ipykernel"
 ]
-dev = ["black", "bump2version", "jupyterlab"]
-publish = ["build", "twine"]
+dev = ["black==23.*", "bump2version==1.*", "jupyterlab==3.*", "tox>=4.0"]
+test = ["pytest~=7.4.0"]
+publish = ["build>=1.0.0", "twine"]
 docs = ["novella~=0.2.6", "pydoc-markdown[novella]~=4.8.2"]
 
 [project.urls]
-Homepage = "https://github.com/cfeenstra67/lmk-python"
+Homepage = "https://github.com/lmkapp/lmk"
 
 [project.scripts]
 lmk = "lmk.__main__:cli"

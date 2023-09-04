@@ -9,7 +9,7 @@ import signal
 import threading
 import time
 import uuid
-from datetime import datetime, timedelta, UTC
+from datetime import datetime, timedelta, timezone
 from typing import Callable, Union, Optional
 
 from ipywidgets import DOMWidget
@@ -67,11 +67,11 @@ def truncate_stream(stream: io.StringIO, max_size: int) -> None:
 def ts_millis(dt: Optional[datetime] = None) -> int:
     if dt is None:
         dt = datetime.utcnow()
-    return int(dt.replace(tzinfo=UTC).timestamp() * 1000)
+    return int(dt.replace(tzinfo=timezone.utc).timestamp() * 1000)
 
 
 def date_from_millis(ts: int) -> datetime:
-    return datetime.utcfromtimestamp(ts / 1000.0).replace(tzinfo=UTC)
+    return datetime.utcfromtimestamp(ts / 1000.0).replace(tzinfo=timezone.utc)
 
 
 def format_date(date: datetime) -> str:
@@ -567,7 +567,7 @@ class LMKWidgetThread(threading.Thread):
 
         @default_channel_changed.connect
         def on_channel_changed(sender, old_value, new_value):
-            LOGGER.debug("Default channel update: %s %s", sender, old_value, new_value)
+            LOGGER.debug("Default channel update: %s %s", old_value, new_value)
             nonlocal instance
             if sender is not instance:
                 return

@@ -9,7 +9,7 @@ This page will show you all of the available commands and options for the LMK CL
 
 The following common options can be passed with any of the other commands:
 ```
-@shell lmk --help | tail +7 | head -2
+@shell python -m lmk --help | sed 's/python -m lmk/lmk/' | head -9
 ```
 
 ## Commands
@@ -17,47 +17,47 @@ The following common options can be passed with any of the other commands:
 ### `login`
 
 ```
-@shell lmk login --help | grep -v "\-\-help"
+@shell python -m lmk login --help | sed 's/python -m lmk/lmk/' | grep -v "\-\-help"
 ```
 
 ### `run`
 
 ```
-@shell lmk run --help | grep -v "\-\-help"
+@shell python -m lmk run --help | sed 's/python -m lmk/lmk/' | grep -v "\-\-help"
 ```
 
 ### `monitor`
 
 ```
-@shell lmk run --help | grep -v "\-\-help"
+@shell python -m lmk run --help | sed 's/python -m lmk/lmk/' | grep -v "\-\-help"
 ```
 
 ### `attach`
 
 ```
-@shell lmk attach --help | grep -v "\-\-help" | grep -v "Options:"
+@shell python -m lmk attach --help | sed 's/python -m lmk/lmk/' | grep -v "\-\-help" | grep -v "Options:"
 ```
 
 ### `jobs`
 
 ```
-@shell lmk jobs --help | grep -v "\-\-help"
+@shell python -m lmk jobs --help | sed 's/python -m lmk/lmk/' | grep -v "\-\-help"
 ```
 
 ### `kill`
 
 ```
-@shell lmk kill --help | grep -v "\-\-help"
+@shell python -m lmk kill --help | sed 's/python -m lmk/lmk/' | grep -v "\-\-help"
 ```
 
 ### `notify`
 
 ```
-@shell lmk notify --help | grep -v "\-\-help"
+@shell python -m lmk notify --help | sed 's/python -m lmk/lmk/' | grep -v "\-\-help"
 ```
 
 ### `shell-plugin`
 
 ```
-@shell lmk shell-plugin --help | grep -v "\-\-help"
+@shell python -m lmk shell-plugin --help | sed 's/python -m lmk/lmk/' | grep -v "\-\-help"
 ```

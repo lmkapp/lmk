@@ -1,3 +1,5 @@
+from lmk import __version__
+
 MODULE_NAME = "@lmkapp/jupyter-widget"
 
-MODULE_VERSION = "~0.1.0"
+MODULE_VERSION = __version__

@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+## [0.1.2] - 2023-09-02
+
+- Fix config file usage; everything was being overwritten on instantiation of the `Instance`.
+
+## [0.1.1] - 2023-09-02
+
+- Fix bug w/ API url, where it could be set to `None` which would cause issues
+
+- Compatibility--previously this package would only work w/ Python 3.11; now it works with python 3.7+
+
 ## [0.1.0] - 2023-07-29
 
 - Creating initial version of CLI to monitor running scripts.

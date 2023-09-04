@@ -10,7 +10,7 @@ import threading
 import time
 import webbrowser
 from datetime import datetime, timedelta
-from typing import Optional, List, Any, Dict, AsyncContextManager
+from typing import Optional, List, Any, Dict, AsyncContextManager, Union
 
 import aiohttp
 from blinker import signal
@@ -169,7 +169,7 @@ class Channels:
     # Iterate through notification channels
     for channel in lmk.channels:
         print(channel)
-    
+
     # Iterate through notification channels asynchronously
     async for channel in lmk.channels:
         print(channel)
@@ -196,7 +196,7 @@ class Channels:
         return self._fetch_state
 
     @fetch_state.setter
-    def fetch_state(self, value: ChannelsState | str) -> None:
+    def fetch_state(self, value: Union[ChannelsState, str]) -> None:
         if isinstance(value, str) and not isinstance(value, ChannelsState):
             value = ChannelsState(value)
         if value == self._fetch_state:
@@ -223,7 +223,7 @@ class Channels:
     def default(self) -> Optional[str]:
         """
         The default notification channel; If ``notify()`` is called without passing
-        ``notification_channels``, the notification will be sent to this channel. If you 
+        ``notification_channels``, the notification will be sent to this channel. If you
         do not set this value, it will be set to the default notification channel for
         your account.
 
@@ -242,7 +242,7 @@ class Channels:
         return self.instance.default_channel
 
     @default.setter
-    def default(self, value: Optional[str | NotificationChannelResponse]) -> None:
+    def default(self, value: Optional[Union[str, NotificationChannelResponse]]) -> None:
         self.instance.default_channel = value
 
     def fetch(self, async_req: bool = False, force: bool = False) -> None:
@@ -339,8 +339,8 @@ class Channels:
 
     def list(
         self,
-        name: str | None = None,
-        type: str | ChannelType | None = None,
+        name: Optional[str] = None,
+        type: Optional[Union[str, ChannelType]] = None,
         name_exact: bool = False,
         fetch: bool = True,
         async_req: bool = False,
@@ -387,12 +387,12 @@ class Channels:
 
     def get(
         self,
-        name: str | None = None,
-        type: str | ChannelType | None = None,
+        name: Optional[str] = None,
+        type: Optional[Union[str, ChannelType]] = None,
         name_exact: bool = False,
         fetch: bool = True,
         async_req: bool = False,
-    ) -> NotificationChannelResponse | None:
+    ) -> Optional[NotificationChannelResponse]:
         """
         Get a single notification channel with the given parameters.
 
@@ -412,6 +412,7 @@ class Channels:
         :return: A notification channel matching the given parameters, or ``None`` if none exists.
         :rtype: NotificationChannelResponse | None
         """
+
         def pick(channels):
             if len(channels) > 1:
                 raise exc.MultipleChannelsMatched(channels)
@@ -433,6 +434,7 @@ class Channels:
 
 class Instance:
     """ """
+
     def __init__(
         self,
         profile: Optional[str] = None,
@@ -480,6 +482,10 @@ class Instance:
         )
         self.channels = Channels(self)
 
+        # Set this to False before loading initial values so that we
+        # don't overwrite things.
+        self.sync_config = False
+
         self.profile = profile
         self.config_path = config_path
         self.access_token = access_token
@@ -513,7 +519,7 @@ class Instance:
         if value == self.server_url:
             return
         old_value, self._server_url = self._server_url, value
-        self.client.configuration.host = value
+        self.client.configuration.host = value or API_URL
         server_url_changed.send(
             self,
             old_value=old_value,
@@ -528,7 +534,7 @@ class Instance:
 
     @default_channel.setter
     def default_channel(
-        self, value: Optional[str | NotificationChannelResponse]
+        self, value: Optional[Union[str, NotificationChannelResponse]]
     ) -> None:
         LOGGER.debug(
             "Setting default channel; Current: %s, new: %s", self.default_channel, value
@@ -550,10 +556,7 @@ class Instance:
 
         parser = configparser.ConfigParser()
         if self.config_path is None:
-            config_paths = [
-                "./.lmk",
-                os.path.expanduser("~/.lmk/config"),
-            ]
+            config_paths = [os.path.expanduser("~/.lmk/config")]
         elif not os.path.isfile(self.config_path):
             raise exc.ConfigFileNotFound(self.config_path)
         else:
@@ -841,7 +844,9 @@ class Instance:
         self,
         message: str,
         content_type: str = "text/markdown",
-        notification_channels: Optional[List[str | NotificationChannelResponse]] = None,
+        notification_channels: Optional[
+            List[Union[str, NotificationChannelResponse]]
+        ] = None,
         notify: bool = True,
         async_req: bool = False,
     ) -> EventResponse:
@@ -849,7 +854,7 @@ class Instance:
         Send a notification to one of your configured notification channels.
 
         **Note:** This method requires you to be [logged in](#login) to LMK.
-        
+
         <details><summary>Usage Example</summary>
         <p>
 
@@ -872,8 +877,8 @@ class Instance:
         ``text/markdown`` are supported. Defaults to ``text/markdown``
         :type content_type: str, optional
         :param notification_channels: A list of notification channel IDs or notification channel
-        objects that you want to send the notification to. If ``None`` and ``notify = True`` (the 
-        default), this will be sent to the default notification channel for your account, which is 
+        objects that you want to send the notification to. If ``None`` and ``notify = True`` (the
+        default), this will be sent to the default notification channel for your account, which is
         the primary email address associated with your account by default. Defaults to ``None``
         :type notification_channels: List[str | NotificationChannelResponse], optional
         :param notify: ``True`` if you want to send a notification to one or more of your configured
@@ -922,13 +927,13 @@ class Instance:
         """
         Create an interactive session, which you can use to remotely monitor a process
         or Jupyter Notebook remotely via the LMK web app. You shouldn't have to use this
-        method directly in normal usage, rather it will be invoed by 
-        
+        method directly in normal usage, rather it will be invoed by
+
         **Note:** This method requires you to be [logged in](#login) to LMK.
 
         :param name: The name of the session. This will appear in the LMK app.
         :type name: str
-        :param state: The initial state parameters for the session. The ``type`` 
+        :param state: The initial state parameters for the session. The ``type``
         field is always required, but the rest of the required fields depend on what
         type of session it is. See the REST API documentation for more information.
         :type state: Dict[str, Any]

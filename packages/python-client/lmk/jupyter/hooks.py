@@ -37,7 +37,7 @@ def _jupyter_nbextension_paths():
     return [
         {
             "section": "notebook",
-            "src": "jupyter/nbextension",
+            "src": "jupyter/nbextension/@lmkapp",
             "dest": "@lmkapp",
             "require": "@lmkapp/jupyter-widget",
         }
