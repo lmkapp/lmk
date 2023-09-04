@@ -59,5 +59,5 @@ The following common options can be passed with any of the other commands:
 ### `shell-plugin`
 
 ```
-@shell python -m lmk shell-plugin | sed 's/python -m lmk/lmk/' --help | grep -v "\-\-help"
+@shell python -m lmk shell-plugin --help | sed 's/python -m lmk/lmk/' | grep -v "\-\-help"
 ```
