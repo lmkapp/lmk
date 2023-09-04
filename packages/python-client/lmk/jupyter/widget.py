@@ -567,7 +567,7 @@ class LMKWidgetThread(threading.Thread):
 
         @default_channel_changed.connect
         def on_channel_changed(sender, old_value, new_value):
-            LOGGER.debug("Default channel update: %s %s", sender, old_value, new_value)
+            LOGGER.debug("Default channel update: %s %s", old_value, new_value)
             nonlocal instance
             if sender is not instance:
                 return
