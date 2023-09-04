@@ -9,7 +9,7 @@ This page will show you all of the available commands and options for the LMK CL
 
 The following common options can be passed with any of the other commands:
 ```
-@shell python -m lmk --help | tail +7 | head -2
+@shell python -m lmk --help
 ```
 
 ## Commands
