@@ -3,13 +3,12 @@ import lmk.patches
 lmk.patches.patch()
 
 from lmk import jupyter, methods
+from lmk.constants import VERSION as __version__
 from lmk.instance import get_instance, set_instance
 from lmk.jupyter import (
     _jupyter_labextension_paths,
     _jupyter_nbextension_paths,
 )
-
-__version__ = "0.1.2.dev0"
 
 __all__ = [
     "__version__",
