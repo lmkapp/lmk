@@ -43,13 +43,15 @@ async def run_daemon(
 
     socket_path = manager.socket_file(job_name)
 
+    async def wait():
+        while not socket_exists(socket_path):
+            job = await manager.get_job(job_name)
+            if job.ended_at:
+                break
+            await asyncio.sleep(0.1)
+
     try:
-        async with asyncio.timeout(10):
-            while not socket_exists(socket_path):
-                job = await manager.get_job(job_name)
-                if job.ended_at:
-                    break
-                await asyncio.sleep(0.1)
+        await asyncio.wait_for(wait(), 10)
     except asyncio.TimeoutError as err:
         raise Exception("Timed out waiting for monitoring process to come up") from err
 

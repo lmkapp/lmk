@@ -4,9 +4,11 @@ import json
 import logging
 import os
 import psutil
+import shutil
 from typing import List
 
 from lmk.utils.asyncio import check_output
+from lmk.process import exc
 from lmk.process.monitor import ProcessMonitor, MonitoredProcess
 
 
@@ -17,13 +19,34 @@ CURRENT_DIR = os.path.dirname(__file__)
 MONITOR_SCRIPT_PATH = os.path.join(CURRENT_DIR, "lldb_monitor_script.py")
 
 
+async def check_lldb() -> None:
+    exec_path = shutil.which("lldb")
+    if exec_path is None:
+        raise exc.LLDBNotFound
+
+    process = await asyncio.create_subprocess_shell(
+        "lldb --batch -o r -- echo 1",
+        stdout=asyncio.subprocess.DEVNULL,
+        stderr=asyncio.subprocess.DEVNULL
+    )
+    exit_code = await process.wait()
+
+    if exit_code != 0:
+        raise exc.LLDBCannotAttach
+
+
 async def run_with_lldb(
     argv: List[str], log_file: io.BytesIO
 ) -> asyncio.subprocess.Process:
     """ """
+    LOGGER.debug("Getting lldb interpreter info")
+
     interpreter_info_str = await check_output(
         ["lldb", "--print-script-interpreter-info"]
     )
+
+    LOGGER.debug("lldb interpreter info: %s", interpreter_info_str)
+
     interpreter_info = json.loads(interpreter_info_str)
 
     pythonpath_components = [interpreter_info["lldb-pythonpath"]]
@@ -112,6 +135,8 @@ class LLDBProcessMonitor(ProcessMonitor):
             [MONITOR_SCRIPT_PATH, "-l", log_level, str(self.pid), output_path],
             log_file,
         )
+        LOGGER.debug("Created lldb process with pid %d", process.pid)
+
         wait_task = asyncio.create_task(process.wait())
         stdout_task = asyncio.create_task(process.stdout.readline())
 

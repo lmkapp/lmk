@@ -161,14 +161,22 @@ async def input_async(prompt: str) -> str:
 
 
 async def check_output(args: List[str]) -> str:
+    kws = {}
+    if sys.version_info < (3, 10):
+        kws["loop"] = asyncio.get_running_loop()
+
     proc = await asyncio.create_subprocess_exec(
         *args,
         stdin=asyncio.subprocess.PIPE,
         stdout=asyncio.subprocess.PIPE,
         stderr=asyncio.subprocess.PIPE,
+        **kws
     )
+    LOGGER.debug("HERE %s", proc)
     stdout, stderr = await proc.communicate()
+    LOGGER.debug("HERE2 %s %s", stdout, stderr)
     exit_code = await proc.wait()
+    LOGGER.debug("HERE3 %s", exit_code)
     if exit_code == 0:
         return stdout.decode()
 

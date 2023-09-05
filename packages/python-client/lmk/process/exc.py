@@ -11,6 +11,13 @@ class JobError(LMKError):
     """
 
 
+class ProcessNotAttached(JobError):
+    """
+    """
+    def __init__(self) -> None:
+        super().__init__("Process not attached")
+
+
 class JobNotFound(JobError, click.ClickException):
     """
     Error indicating a job wasn't found
@@ -48,6 +55,37 @@ class NotLoggedIn(JobError, click.ClickException):
 
     def __init__(self) -> None:
         super().__init__("Not logged in. Run `lmk login` to log in to LMK.")
+
+    def show(self, file: Optional[IO] = None) -> None:
+        click.secho(str(self), fg="red", file=file)
+
+
+class LLDBNotFound(JobError, click.ClickException):
+    """
+    """
+
+    exit_code = 1
+
+    def __init__(self) -> None:
+        super().__init__("`lldb` executable not found.")
+    
+    def show(self, file: Optional[IO] = None) -> None:
+        click.secho(str(self), fg="red", file=file)
+
+
+class LLDBCannotAttach(JobError, click.ClickException):
+    """
+    """
+    exit_code = 1
+
+    def __init__(self) -> None:
+        super().__init__(
+            "`lldb` is not allowed to attach to processes, which means "
+            "you can't monitor alreay-running processes. Try monitoring "
+            "your command with the `lmk run` command if possible, or see "
+            "https://docs.lmkapp.dev/docs/cli/running-process for information "
+            "on how to allow `lldb` to attach to processes."
+        )
 
     def show(self, file: Optional[IO] = None) -> None:
         click.secho(str(self), fg="red", file=file)

@@ -4,7 +4,6 @@ import json
 import logging
 import multiprocessing
 import os
-import shlex
 import signal
 import socket
 import textwrap
@@ -16,10 +15,11 @@ from aiohttp import web
 from lmk.generated.models.session_response import SessionResponse
 from lmk.generated.models.process_session_state import ProcessSessionState
 from lmk.instance import get_instance
+from lmk.process import exc
 from lmk.process.manager import JobManager
 from lmk.process.models import Job
 from lmk.process.monitor import ProcessMonitor, MonitoredProcess
-from lmk.utils import setup_logging, socket_exists, read_last_lines
+from lmk.utils import setup_logging, socket_exists, read_last_lines, shlex_join
 
 
 LOGGER = logging.getLogger(__name__)
@@ -58,15 +58,16 @@ class ProcessMonitorController:
         job_name: str,
         monitor: ProcessMonitor,
         manager: JobManager,
+        loop: Optional[asyncio.AbstractEventLoop] = None,
     ) -> None:
         self.job_name = job_name
         self.manager = manager
         self.monitor = monitor
         self.hostname = socket.gethostname()
 
-        self.done_event = asyncio.Event()
-        self.attached_event = asyncio.Event()
-        self.update_event = asyncio.Event()
+        self.done_event = asyncio.Event(loop=loop)
+        self.attached_event = asyncio.Event(loop=loop)
+        self.update_event = asyncio.Event(loop=loop)
         self.session: Optional[SessionResponse] = None
         self.process: Optional[MonitoredProcess] = None
 
@@ -157,7 +158,7 @@ class ProcessMonitorController:
             ProcessSessionState(
                 type="process",
                 hostname=self.hostname,
-                command=shlex.join(json.loads(job.command)),
+                command=shlex_join(json.loads(job.command)),
                 pid=job.pid,
                 notifyOn=job.notify_on,
                 notifyChannel=job.channel_id,
@@ -281,11 +282,13 @@ class ProcessMonitorController:
                 with open(output_path, "wb+") as f:
                     pass
 
+                LOGGER.debug("Attaching to process")
                 self.process = await self.monitor.attach(
                     output_path,
                     log_path,
                     log_level,
                 )
+                LOGGER.debug("Attached to %d (%s)", self.process.pid, self.process.command)
                 await self.manager.update_job(
                     self.job_name,
                     pid=self.process.pid,
@@ -336,7 +339,7 @@ class ProcessMonitorController:
                         f"""
                         Process exited with code **{exit_code}**:
                         ```bash
-                        {shlex.join(json.loads(job.command)) if job.command else "<unknown>"}
+                        {shlex_join(json.loads(job.command)) if job.command else "<unknown>"}
                         ```
                         Process ran on `{self.hostname}`
 
@@ -367,7 +370,7 @@ class ProcessMonitorController:
 
     async def send_signal(self, signum: int) -> None:
         if self.process is None:
-            raise ProcessNotAttached
+            raise exc.ProcessNotAttached
         await self.process.send_signal(signum)
 
     async def run(self, log_path: str, log_level: str) -> None:
@@ -416,7 +419,10 @@ class ProcessMonitorDaemon(multiprocessing.Process):
         os.setsid()
 
         manager = JobManager(self.base_path)
-        controller = ProcessMonitorController(self.job_name, self.monitor, manager)
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+
+        controller = ProcessMonitorController(self.job_name, self.monitor, manager, loop=loop)
 
         try:
             log_path = manager.log_file(self.job_name)
@@ -425,7 +431,6 @@ class ProcessMonitorDaemon(multiprocessing.Process):
                 setup_logging(log_stream=log_stream, level=self.log_level)
 
                 with pid_ctx(pid_file, self.pid):
-                    loop = asyncio.new_event_loop()
 
                     try:
                         loop.run_until_complete(

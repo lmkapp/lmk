@@ -2,11 +2,10 @@ import asyncio
 import logging
 import os
 import pty
-import shlex
 from typing import List
 
 from lmk.process.monitor import ProcessMonitor, MonitoredProcess
-from lmk.utils import wait_for_fd
+from lmk.utils import wait_for_fd, shlex_join
 
 
 LOGGER = logging.getLogger(__name__)
@@ -86,6 +85,6 @@ class ChildMonitor(ProcessMonitor):
             start_new_session=True,
         )
         LOGGER.debug(
-            "Created child process: [%s], pid: %d", shlex.join(self.argv), proc.pid
+            "Created child process: [%s], pid: %d", shlex_join(self.argv), proc.pid
         )
         return MonitoredChildProcess(proc, self.argv, read_output, output_path)

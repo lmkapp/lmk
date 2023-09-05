@@ -1,6 +1,5 @@
 import asyncio
 import psutil
-import shlex
 import sys
 from typing import List, Any, Dict
 
@@ -9,6 +8,7 @@ import click
 from lmk.cli import cli
 from lmk.process.manager import JobManager
 from lmk.shell_plugin import resolve_pid
+from lmk.utils import shlex_join
 
 
 def format_params(values: Dict[str, Any], params: List[click.Parameter]) -> List[str]:
@@ -43,6 +43,8 @@ async def process_cmd(
 ) -> Dict[str, Any]:
     manager = JobManager(ctx.params["base_path"])
 
+    await manager.setup()
+
     all_args = [*ctx.protected_args, *ctx.args]
     cmd_name, cmd, cmd_args = cli.resolve_command(ctx, all_args)
     with cmd.make_context(cmd_name, cmd_args, parent=ctx) as sub_ctx:
@@ -70,7 +72,7 @@ async def process_cmd(
             new_args.append(cmd_name)
             new_args.extend(format_params(new_params, cmd_params))
             print(
-                "CMD" if sub_ctx.params["attach"] else "LASTCMD", shlex.join(new_args)
+                "CMD" if sub_ctx.params["attach"] else "LASTCMD", shlex_join(new_args)
             )
 
             print("DISOWN", shell_job_id)
@@ -82,12 +84,12 @@ async def process_cmd(
                 attach_params = attach_command.get_params(ctx)
                 new_attach_params = {"job_id": job_id}
                 new_args.extend(format_params(new_attach_params, attach_params))
-                print("LASTCMD", shlex.join(new_args))
+                print("LASTCMD", shlex_join(new_args))
         else:
             out_args = root_args.copy()
             out_args.append(cmd_name)
             out_args.extend(format_params(sub_ctx.params, cmd_params))
-            print("LASTCMD", shlex.join(out_args))
+            print("LASTCMD", shlex_join(out_args))
 
 
 async def main(args: List[str]) -> int:

@@ -178,11 +178,11 @@ class Channels:
     </details>
     """
 
-    def __init__(self, instance: "Instance") -> None:
+    def __init__(self, instance: "Instance", loop: Optional[asyncio.AbstractEventLoop] = None) -> None:
         self.instance = instance
         self._fetch_state = ChannelsState.None_
         self._fetch_lock = threading.Lock()
-        self._afetch_lock = asyncio.Lock()
+        self._afetch_lock = asyncio.Lock(loop=loop)
         self.data = None
 
         @access_token_changed.connect_via(instance)
@@ -445,6 +445,7 @@ class Instance:
         access_token_expires: Optional[datetime] = None,
         logger: Optional[logging.Logger] = None,
         sync_config: bool = True,
+        loop: Optional[asyncio.AbstractEventLoop] = None,
     ) -> None:
         if profile is None:
             profile = os.getenv("LMK_PROFILE")
@@ -480,7 +481,7 @@ class Instance:
             server_url=server_url or API_URL,
             logger=logger,
         )
-        self.channels = Channels(self)
+        self.channels = Channels(self, loop=loop)
 
         # Set this to False before loading initial values so that we
         # don't overwrite things.

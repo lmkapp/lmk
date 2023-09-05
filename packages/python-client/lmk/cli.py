@@ -1,3 +1,4 @@
+import asyncio
 import click
 import os
 import psutil
@@ -7,12 +8,12 @@ import sys
 import textwrap
 from typing import List, Optional
 
-from lmk.instance import get_instance
+from lmk.instance import get_instance, set_instance, Instance
 from lmk.process import exc
 from lmk.process.attach import attach_interactive
 from lmk.process.child_monitor import ChildMonitor
 from lmk.process.client import send_signal, update_job
-from lmk.process.lldb_monitor import LLDBProcessMonitor
+from lmk.process.lldb_monitor import LLDBProcessMonitor, check_lldb
 from lmk.process.manager import JobManager
 from lmk.process.run import run_foreground, run_daemon
 from lmk.shell_plugin import (
@@ -64,6 +65,10 @@ async def cli(ctx: click.Context, log_level: str, base_path: str):
     await manager.setup()
 
     ctx.obj["manager"] = manager
+
+    event_loop = asyncio.get_event_loop()
+
+    set_instance(Instance(loop=event_loop))
 
 
 @cli.command(
@@ -218,6 +223,8 @@ async def monitor(
         name = proc.cmdline()[0]
 
     _check_login()
+
+    await check_lldb()
 
     if job is None:
         job_obj = await manager.create_job(name, notify)
