@@ -72,4 +72,4 @@ jobs:
         working-directory: ./packages/python-client
         run: |
           . venv/bin/activate
-          tox -e test,type --parallel
+          tox -e test,type --parallel --parallel-no-spinner
