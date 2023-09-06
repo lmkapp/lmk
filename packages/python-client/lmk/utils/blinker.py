@@ -7,7 +7,7 @@ import blinker
 def wait_for_signal(
     signal: blinker.Signal, sender: Any = blinker.ANY
 ) -> asyncio.Future:
-    future = asyncio.Future()
+    future: asyncio.Future = asyncio.Future()
 
     def handle_signal(sender, **kwargs):
         future.set_result((sender, kwargs))

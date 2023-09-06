@@ -2,11 +2,10 @@ import asyncio
 import logging
 import os
 import pty
-import shlex
 from typing import List
 
 from lmk.process.monitor import ProcessMonitor, MonitoredProcess
-from lmk.utils import wait_for_fd
+from lmk.utils import wait_for_fd, shlex_join
 
 
 LOGGER = logging.getLogger(__name__)
@@ -26,7 +25,7 @@ class MonitoredChildProcess(MonitoredProcess):
         self.output_path = output_path
 
     @property
-    def pid(self) -> int:
+    def pid(self) -> int:  # type: ignore
         return self.process.pid
 
     async def send_signal(self, signum: int) -> None:
@@ -48,6 +47,15 @@ class MonitoredChildProcess(MonitoredProcess):
                     output_ready = asyncio.create_task(wait_for_fd(self.output_fd))
 
             output_ready.cancel()
+            os.set_blocking(self.output_fd, False)
+
+            # Flush any remaining output
+            while True:
+                try:
+                    output = os.read(self.output_fd, 1000)
+                except BlockingIOError:
+                    break
+                output_file.write(output)
 
             return wait.result()
 
@@ -62,7 +70,6 @@ class ChildMonitor(ProcessMonitor):
 
     async def attach(
         self,
-        pid: int,
         output_path: str,
         log_path: str,
         log_level: str,
@@ -78,6 +85,6 @@ class ChildMonitor(ProcessMonitor):
             start_new_session=True,
         )
         LOGGER.debug(
-            "Created child process: [%s], pid: %d", shlex.join(self.argv), proc.pid
+            "Created child process: [%s], pid: %d", shlex_join(self.argv), proc.pid
         )
         return MonitoredChildProcess(proc, self.argv, read_output, output_path)

@@ -1,6 +1,6 @@
 import contextlib
 import logging
-from typing import ContextManager
+from typing import Generator
 
 
 def is_jupyter() -> bool:
@@ -40,7 +40,7 @@ def display_widget() -> None:
 
 
 @contextlib.contextmanager
-def background_ctx(logger: logging.Logger, ctx: str) -> ContextManager[None]:
+def background_ctx(logger: logging.Logger, ctx: str) -> Generator[None, None, None]:
     try:
         yield
     except Exception as err:

@@ -11,7 +11,7 @@ class MonitoredProcess(abc.ABC):
     async def wait(self) -> int:
         raise NotImplementedError
 
-    @abc.abstractclassmethod
+    @abc.abstractmethod
     async def send_signal(self, signum: int) -> None:
         raise NotImplementedError
 
@@ -22,7 +22,6 @@ class ProcessMonitor(abc.ABC):
     @abc.abstractmethod
     async def attach(
         self,
-        pid: int,
         output_path: str,
         log_path: str,
         log_level: str,

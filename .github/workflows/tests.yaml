@@ -1,0 +1,75 @@
+name: Run tests
+
+on:
+  push:
+    branches: [main]
+  # pull_request:
+  #   branches: [main]
+
+jobs:
+
+  test:
+
+    runs-on: ubuntu-latest
+    # runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        # os: [ubuntu-18.04]
+        python: ["3.7", "3.8", "3.9", "3.10", "3.11"]
+
+    steps:
+      - uses: actions/checkout@v2
+    
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      # PNPM stuff
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        id: pnpm-install
+        with:
+          version: 7
+          run_install: false
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        run: |
+          echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+      - uses: actions/cache@v3
+        name: Setup pnpm cache
+        with:
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+      - name: Install node dependencies
+        run: pnpm install --filter @lmkapp/jupyter-widget...
+
+      # Python stuff
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Get pip cache dir
+        id: pip-cache
+        run: |
+          echo "STORE_PATH=$(venv/bin/pip cache dir)"
+      - name: Setup python cache
+        uses: actions/cache@v3
+        with:
+          path: ${{ steps.pip-cache.outputs.STORE_PATH }} ./packages/python-client/.tox
+          key: ${{ runner.os }}-python-${{ hashFiles('**/pyproject.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-python-
+      - name: Install Python dependencies
+        run: |
+          cd ./packages/python-client
+          pnpm generate
+          python -m venv venv
+          . venv/bin/activate
+          pip install -e '.[dev]'
+      # `types,cli,jupyter` only needed for this, might remove later
+      - name: Run tests
+        working-directory: ./packages/python-client
+        run: |
+          . venv/bin/activate
+          tox -e test,type --parallel --parallel-no-spinner

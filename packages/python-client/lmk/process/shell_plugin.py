@@ -5,6 +5,8 @@ from typing import Optional, Tuple, List
 
 import click
 
+from lmk.process import exc
+
 
 PROJECT_DIR = os.path.dirname(__file__)
 
@@ -26,7 +28,7 @@ def detect_shell() -> Optional[str]:
 
 def shell_profile_file(shell: Optional[str] = None) -> str:
     if shell is None:
-        raise RuntimeError(f"Cannot detect current shell")
+        raise exc.CannotDetermineShell()
 
     candidates = [f"~/.{shell}rc", f"~/.{shell}_profile"]
     for candidate in candidates:
@@ -141,7 +143,7 @@ def parse_jobs_output(output: str) -> List[ShellJob]:
     return out
 
 
-def resolve_pid(pid: str) -> Tuple[int, int]:
+def resolve_pid(pid: str) -> Tuple[int, Optional[int]]:
     if pid.isdigit():
         return int(pid), None
 
@@ -167,23 +169,6 @@ def resolve_pid(pid: str) -> Tuple[int, int]:
             break
 
     if match is None:
-        raise NoShellJobFound(job_id)
+        raise exc.NoShellJobFound(job_id)
 
     return match.pid, match.job_id
-
-
-class CannotDetermineShell(click.ClickException):
-    """ """
-
-    def __init__(self) -> None:
-        super().__init__("Cannot determine shell")
-        self.exit_code = 1
-
-
-class NoShellJobFound(click.ClickException):
-    """ """
-
-    def __init__(self, job_id: str) -> None:
-        super().__init__(f"No shell job found with ID: {job_id}")
-        self.job_id = job_id
-        self.exit_code = 1

@@ -16,12 +16,10 @@ async def send_signal(socket_path: str, signal: Union[str, int]) -> None:
             raise ResponseError(response.status, await response.text())
 
 
-async def set_notify_on(socket_path: str, notify_on: str) -> None:
+async def update_job(socket_path: str) -> None:
     connector = aiohttp.UnixConnector(path=socket_path)
     async with aiohttp.ClientSession(connector=connector) as session:
-        async with session.post(
-            "http://daemon/set-notify-on", json={"notify_on": notify_on}
-        ) as response:
+        async with session.post("http://daemon/update") as response:
             if response.status == 200:
                 return
             raise ResponseError(response.status, await response.text())

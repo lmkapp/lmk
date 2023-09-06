@@ -4,7 +4,7 @@ import enum
 import logging
 import time
 from datetime import datetime
-from typing import Optional
+from typing import Optional, cast
 
 from blinker import signal
 from IPython import get_ipython
@@ -37,7 +37,7 @@ class IPythonCellState:
     result: Optional[ExecutionResult]
     finished_at: Optional[datetime]
 
-    def error(self) -> Optional[Exception]:
+    def error(self) -> Optional[BaseException]:
         if not self.result:
             return None
         if self.result.error_before_exec:
@@ -57,8 +57,8 @@ class IPythonHistory:
         self._state = IPythonShellState.Idle
         self.shell = shell
 
-        self._idle_start = None
-        self._last_cell_state = None
+        self._idle_start: Optional[float] = None
+        self._last_cell_state: Optional[IPythonCellState] = None
 
     @property
     def state(self) -> str:
@@ -115,7 +115,7 @@ class IPythonHistory:
                 execution_count = -1
             self._last_cell_state = IPythonCellState(
                 execution_count=execution_count,
-                info=result.info,
+                info=cast(ExecutionInfo, result.info),
                 started_at=started_at,
                 result=result,
                 finished_at=now,

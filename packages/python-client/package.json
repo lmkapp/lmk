@@ -64,6 +64,7 @@
     "pypi-upload-test": "twine upload --repository-url https://test.pypi.org/legacy/ dist/lmkapp-*",
     "pypi-upload": "twine upload dist/lmkapp-*",
     "test:python": "venv/bin/py.test -vv tests",
+    "check:python": "venv/bin/mypy && venv/bin/black --check lmk",
     "tox": "venv/bin/tox",
     "npm-publish": "pnpm readme:npm && pnpm publish --access public --no-git-checks; pnpm readme:git"
   },

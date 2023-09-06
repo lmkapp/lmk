@@ -42,13 +42,23 @@ dependencies = [
 version = "0.1.2.dev0"
 
 [project.optional-dependencies]
-cli = ["click<9"]
+cli = ["click<9", "sqlalchemy[asyncio]>=2,<3", "aiosqlite<1", "psutil"]
 jupyter = [
     "ipywidgets>=7.0.0",
     "ipython>=6.1.0",
     "ipykernel"
 ]
-dev = ["black==23.*", "bump2version==1.*", "jupyterlab==3.*", "tox>=4.0"]
+dev = [
+    "black==23.*",
+    "bump2version==1.*",
+    "jupyterlab==3.*",
+    "tox>=4.0",
+]
+types = [
+    "mypy>=1,<2",
+    "types-psutil",
+    "types-python-dateutil"
+]
 test = ["pytest~=7.4.0"]
 publish = ["build>=1.0.0", "twine"]
 docs = ["novella~=0.2.6", "pydoc-markdown[novella]~=4.8.2"]
@@ -93,3 +103,8 @@ npm = "pnpm"
 
 [tool.hatch.metadata]
 allow-direct-references = true
+
+[tool.mypy]
+packages = ["lmk"]
+exclude = ["generated"]
+ignore_missing_imports = true

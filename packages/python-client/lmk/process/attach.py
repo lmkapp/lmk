@@ -1,13 +1,13 @@
 import asyncio
 import io
-import json
 import logging
-import os
 import signal
 import sys
-from typing import Optional
+from typing import Optional, IO
 
+from lmk.process import exc
 from lmk.process.client import send_signal, wait_for_job
+from lmk.process.manager import JobManager
 from lmk.utils import wait_for_socket, shutdown_process, socket_exists, input_async
 
 
@@ -15,12 +15,12 @@ LOGGER = logging.getLogger(__name__)
 
 
 class ProcessAttachment:
-    def __init__(self, process: asyncio.subprocess.Process, job_dir: str):
+    def __init__(
+        self, process: asyncio.subprocess.Process, job_name: str, manager: JobManager
+    ):
         self.process = process
-        self.job_dir = job_dir
-        self.job_id = os.path.split(job_dir)[-1]
-        self.socket_path = os.path.join(job_dir, "daemon.sock")
-        self.result_path = os.path.join(self.job_dir, "result.json")
+        self.job_name = job_name
+        self.manager = manager
 
     def pause(self) -> None:
         self.process.send_signal(signal.SIGSTOP)
@@ -32,30 +32,32 @@ class ProcessAttachment:
         await shutdown_process(self.process, 1, 1)
 
     async def wait(self) -> int:
-        if socket_exists(self.socket_path):
-            resp = await wait_for_job(self.socket_path)
+        socket_path = self.manager.socket_file(self.job_name)
+        if socket_exists(socket_path):
+            resp = await wait_for_job(socket_path)
             exit_code = resp["exit_code"]
-        elif os.path.isfile(self.result_path):
-            with open(self.result_path) as f:
-                result = json.load(f)
-                exit_code = result["exit_code"]
         else:
-            raise RuntimeError(
-                f"Job {self.job_id} exited unexpectedly, unable to retrieve result"
-            )
+            job = await self.manager.get_job(self.job_name)
+            if job is None:
+                raise exc.JobNotFound(self.job_name)
 
-        LOGGER.info("Job %s exited with code %d", self.job_id, exit_code)
+            exit_code = job.exit_code
+            if exit_code is None:
+                raise exc.JobExitedUnexpectedly(job)
+
+        LOGGER.info("Job %s exited with code %d", self.job_name, exit_code)
         await self.stop()
         return exit_code
 
 
 async def attach(
-    job_dir: str,
-    stdout_stream: io.BytesIO = sys.stdout,
-    stderr_stream: io.BytesIO = sys.stderr,
+    job_name: str,
+    manager: JobManager,
+    stdout_stream: IO[str] = sys.stdout,
+    stderr_stream: IO[str] = sys.stderr,
 ) -> ProcessAttachment:
-    log_file = os.path.join(job_dir, "output.log")
-    socket_path = os.path.join(job_dir, "daemon.sock")
+    log_file = manager.output_file(job_name)
+    socket_path = manager.socket_file(job_name)
 
     await wait_for_socket(socket_path, 3)
 
@@ -70,15 +72,16 @@ async def attach(
         start_new_session=True,
     )
 
-    return ProcessAttachment(tail, job_dir)
+    return ProcessAttachment(tail, job_name, manager)
 
 
 async def attach_simple(
-    job_dir: str,
-    stdout_stream: io.BytesIO = sys.stdout,
-    stderr_stream: io.BytesIO = sys.stderr,
+    job_name: str,
+    manager: JobManager,
+    stdout_stream: IO[str] = sys.stdout,
+    stderr_stream: IO[str] = sys.stderr,
 ) -> int:
-    attachment = await attach(job_dir, stdout_stream, stderr_stream)
+    attachment = await attach(job_name, manager, stdout_stream, stderr_stream)
     try:
         return await attachment.wait()
     except:
@@ -99,10 +102,10 @@ async def get_interrupt_action() -> str:
             print(f"Invalid selection: {input_value}")
 
 
-async def attach_interactive(job_dir: str) -> Optional[int]:
-    socket_path = os.path.join(job_dir, "daemon.sock")
+async def attach_interactive(job_name: str, manager: JobManager) -> Optional[int]:
+    socket_path = manager.socket_file(job_name)
 
-    attachment = await attach(job_dir)
+    attachment = await attach(job_name, manager)
 
     interupts = 0
     while True:
@@ -110,9 +113,6 @@ async def attach_interactive(job_dir: str) -> Optional[int]:
         try:
             return await asyncio.shield(task)
         except (asyncio.CancelledError, KeyboardInterrupt):
-            # print("ERROR123")
-            # task.cancel()
-
             if interupts > 0:
                 task.cancel()
                 await attachment.stop()

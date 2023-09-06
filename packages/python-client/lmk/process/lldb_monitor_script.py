@@ -82,7 +82,7 @@ async def wait_for_event(
 
 async def wait_for_fd(fd: int) -> None:
     loop = asyncio.get_running_loop()
-    future = asyncio.Future()
+    future: asyncio.Future = asyncio.Future()
     loop.add_reader(fd, future.set_result, None)
     future.add_done_callback(lambda f: loop.remove_reader(fd))
     await future
@@ -201,7 +201,7 @@ async def run(process: lldb.SBProcess, listener: lldb.SBListener) -> int:
             LOGGER.warn("Unhandled state: %s", state)
 
 
-async def main(argv: List[str]) -> None:
+async def main(argv: List[str]) -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("pid", type=int, help="Pid to monitor")
     parser.add_argument("output_file", help="File to redirect output to")
@@ -290,6 +290,7 @@ async def main(argv: List[str]) -> None:
         exit_code = await run(process, listener)
         sys.stdout.write(json.dumps({"type": "exit", "exit_code": exit_code}) + "\n")
         sys.stdout.flush()
+        return 0
     finally:
         LOGGER.info("Terminating...")
         process.Detach()
@@ -297,4 +298,4 @@ async def main(argv: List[str]) -> None:
 
 
 if __name__ == "__main__":
-    asyncio.run(main(sys.argv[1:]))
+    sys.exit(asyncio.run(main(sys.argv[1:])))

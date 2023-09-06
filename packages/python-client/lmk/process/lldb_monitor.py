@@ -4,9 +4,11 @@ import json
 import logging
 import os
 import psutil
-from typing import List
+import shutil
+from typing import List, IO, cast
 
 from lmk.utils.asyncio import check_output
+from lmk.process import exc
 from lmk.process.monitor import ProcessMonitor, MonitoredProcess
 
 
@@ -17,13 +19,34 @@ CURRENT_DIR = os.path.dirname(__file__)
 MONITOR_SCRIPT_PATH = os.path.join(CURRENT_DIR, "lldb_monitor_script.py")
 
 
+async def check_lldb() -> None:
+    exec_path = shutil.which("lldb")
+    if exec_path is None:
+        raise exc.LLDBNotFound
+
+    process = await asyncio.create_subprocess_shell(
+        "lldb --batch -o r -- echo 1",
+        stdout=asyncio.subprocess.DEVNULL,
+        stderr=asyncio.subprocess.DEVNULL,
+    )
+    exit_code = await process.wait()
+
+    if exit_code != 0:
+        raise exc.LLDBCannotAttach
+
+
 async def run_with_lldb(
-    argv: List[str], log_file: io.BytesIO
+    argv: List[str], log_file: IO[bytes]
 ) -> asyncio.subprocess.Process:
     """ """
+    LOGGER.debug("Getting lldb interpreter info")
+
     interpreter_info_str = await check_output(
         ["lldb", "--print-script-interpreter-info"]
     )
+
+    LOGGER.debug("lldb interpreter info: %s", interpreter_info_str)
+
     interpreter_info = json.loads(interpreter_info_str)
 
     pythonpath_components = [interpreter_info["lldb-pythonpath"]]
@@ -52,7 +75,7 @@ class LLDBMonitoredProcess(MonitoredProcess):
         process: asyncio.subprocess.Process,
         pid: int,
         command: List[str],
-        log_file: io.BytesIO,
+        log_file: IO[bytes],
     ) -> None:
         self.process = process
         self.pid = pid
@@ -61,11 +84,14 @@ class LLDBMonitoredProcess(MonitoredProcess):
 
     async def send_signal(self, signum: int) -> None:
         message = json.dumps({"type": "send_signal", "signal": signum}) + "\n"
-        self.process.stdin.write(message.encode())
+        stdin = cast(asyncio.StreamWriter, self.process.stdin)
+        stdin.write(message.encode())
 
     async def wait(self) -> int:
         try:
-            stdout_line = asyncio.create_task(self.process.stdout.readline())
+            stdout = cast(asyncio.StreamReader, self.process.stdout)
+
+            stdout_line = asyncio.create_task(stdout.readline())
             wait_task = asyncio.create_task(self.process.wait())
             while True:
                 await asyncio.wait(
@@ -91,14 +117,17 @@ class LLDBMonitoredProcess(MonitoredProcess):
                             "Unhandled message from monitor process: %s",
                             message.get("type"),
                         )
-                    stdout_line = asyncio.create_task(self.process.stdout.readline())
+                    stdout_line = asyncio.create_task(stdout.readline())
         finally:
             self.log_file.close()
 
 
 class LLDBProcessMonitor(ProcessMonitor):
+    def __init__(self, pid: int) -> None:
+        self.pid = pid
+
     async def attach(
-        self, pid: int, output_path: str, log_path: str, log_level: str
+        self, output_path: str, log_path: str, log_level: str
     ) -> MonitoredProcess:
         log_file = open(log_path, "ab+", buffering=0)
 
@@ -106,11 +135,14 @@ class LLDBProcessMonitor(ProcessMonitor):
             pass
 
         process = await run_with_lldb(
-            [MONITOR_SCRIPT_PATH, "-l", log_level, str(pid), output_path],
+            [MONITOR_SCRIPT_PATH, "-l", log_level, str(self.pid), output_path],
             log_file,
         )
+        LOGGER.debug("Created lldb process with pid %d", process.pid)
+
+        stdout = cast(asyncio.StreamReader, process.stdout)
         wait_task = asyncio.create_task(process.wait())
-        stdout_task = asyncio.create_task(process.stdout.readline())
+        stdout_task = asyncio.create_task(stdout.readline())
 
         await asyncio.wait(
             [wait_task, stdout_task], return_when=asyncio.FIRST_COMPLETED
@@ -130,6 +162,6 @@ class LLDBProcessMonitor(ProcessMonitor):
 
         LOGGER.info("Process attached")
 
-        command = psutil.Process(pid).cmdline()
+        command = psutil.Process(self.pid).cmdline()
 
-        return LLDBMonitoredProcess(process, pid, command, log_file)
+        return LLDBMonitoredProcess(process, self.pid, command, log_file)

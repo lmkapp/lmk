@@ -115,7 +115,7 @@ class NotebookInfoWatcher:
 
     def __init__(self, poll_interval: float = 30.0) -> None:
         self.poll_interval = poll_interval
-        self.notebook_name = None
+        self.notebook_name: Optional[str] = None
 
     def refresh(self) -> None:
         current_name = notebook_name()

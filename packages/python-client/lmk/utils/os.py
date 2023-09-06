@@ -4,7 +4,7 @@ import logging
 import os
 import signal
 import stat
-from typing import Callable, ContextManager, List, Optional
+from typing import Callable, Generator, List, Optional
 
 
 LOGGER = logging.getLogger(__name__)
@@ -22,7 +22,7 @@ def socket_exists(path: str) -> bool:
 def signal_handler_ctx(
     signals: List[int],
     handler: Callable[[int], None],
-) -> ContextManager[None]:
+) -> Generator[None, None, None]:
     def handle_signal(signum, _):
         handler(signum)
 
@@ -43,7 +43,7 @@ def read_last_lines(
     size = os.path.getsize(path)
 
     with open(path) as file:
-        seek_start = max(size - max_size, 0)
+        seek_start = max(size - max_size, 0) if max_size is not None else 0
         if seek_start > 0:
             file.seek(seek_start)
         lines = []

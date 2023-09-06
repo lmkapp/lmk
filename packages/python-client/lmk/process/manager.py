@@ -1,148 +1,173 @@
-import asyncio
 import json
 import os
 import uuid
-import dataclasses as dc
 from datetime import date, datetime
-from typing import Optional, AsyncGenerator, List
+from typing import Optional, List, Any
 
-import aiohttp
+import sqlalchemy as sa
+from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 
-from lmk.utils import socket_exists
-
-
-@dc.dataclass(frozen=True)
-class NewJob:
-    """ """
-
-    job_id: str
-    job_dir: str
-    pid_file: str
+from lmk.process import exc
+from lmk.process.models import Base, Job
 
 
-@dc.dataclass(frozen=True)
-class RunningJob(NewJob):
-    """ """
-
-    running: bool
-    target_pid: int
-    notify_on: str
-    started_at: datetime
+MISSING: Any = object()
 
 
 class JobManager:
-    """ """
+    """
+    Interface for managing and querying job data. Job data is stored in a SQLite database
+    """
 
     def __init__(self, base_path: Optional[str] = None) -> None:
+        if base_path is None:
+            base_path = os.path.expanduser("~/.lmk")
         self.base_path = base_path
-        self.pids_dir = os.path.join(base_path, "job-pids")
         self.jobs_dir = os.path.join(base_path, "jobs")
+        self.engine = create_async_engine(
+            f"sqlite+aiosqlite:///{os.path.join(base_path, 'data.db')}"
+        )
+        self.async_session = async_sessionmaker(
+            bind=self.engine, expire_on_commit=False
+        )
 
-    def create_job(self, process_name: Optional[str] = None) -> NewJob:
+    async def setup(self) -> None:
+        if not os.path.exists(self.base_path):
+            os.makedirs(self.base_path)
+
+        if not os.path.exists(self.jobs_dir):
+            os.makedirs(self.jobs_dir)
+
+        async with self.engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
+
+    def _job_dir(self, name: str) -> str:
+        return os.path.join(self.jobs_dir, name)
+
+    def pid_file(self, name: str) -> str:
+        return os.path.join(self._job_dir(name), "manager.pid")
+
+    def socket_file(self, name: str) -> str:
+        return os.path.join(self._job_dir(name), "manager.sock")
+
+    def log_file(self, name: str) -> str:
+        return os.path.join(self._job_dir(name), "manager.log")
+
+    def output_file(self, name: str) -> str:
+        return os.path.join(self._job_dir(name), "process.log")
+
+    async def create_job(
+        self, process_name: Optional[str] = None, notify_on: Optional[str] = None
+    ) -> Job:
+        if notify_on is None:
+            notify_on = "none"
+
         parts = [process_name] if process_name else []
         parts.append(date.today().strftime("%Y%m%d"))
 
-        job_id = None
-        job_dir = None
+        async with self.async_session() as session:
+            while True:
+                job_hash = uuid.uuid4().hex[:8]
+                job_id = "-".join(parts + [job_hash])
 
-        while True:
-            job_hash = uuid.uuid4().hex[:8]
-            job_id = "-".join(parts + [job_hash])
-
-            job_dir = os.path.join(self.jobs_dir, job_id)
-            if os.path.exists(job_dir):
-                continue
-
-            os.makedirs(job_dir)
-            break
-
-        if not os.path.exists(self.pids_dir):
-            os.makedirs(self.pids_dir)
-
-        pid_file = os.path.join(self.pids_dir, f"{job_id}.pid")
-        return NewJob(job_id, job_dir, pid_file)
-
-    def get_not_started_job(self, job_id: str) -> NewJob:
-        job_dir = os.path.join(self.jobs_dir, job_id)
-        if not os.path.exists(job_dir):
-            raise ValueError(f"Job does not exist: {job_id}")
-
-        pid_file = os.path.join(self.pids_dir, f"{job_id}.pid")
-        return NewJob(job_id, job_dir, pid_file)
-
-    async def get_job(self, job_id: str) -> Optional[RunningJob]:
-        job_dir = os.path.join(self.jobs_dir, job_id)
-        if not os.path.exists(job_dir):
-            return None
-
-        pid_file = os.path.join(self.pids_dir, f"{job_id}.pid")
-
-        socket_path = os.path.join(job_dir, "daemon.sock")
-        if not socket_exists(socket_path):
-            result_file = os.path.join(job_dir, "result.json")
-            if not os.path.exists(result_file):
-                return None
-
-            with open(result_file) as f:
-                result = json.load(f)
-                return RunningJob(
-                    job_id=job_id,
-                    job_dir=job_dir,
-                    pid_file=pid_file,
-                    running=False,
-                    target_pid=result["pid"],
-                    notify_on=result["notify_on"],
-                    started_at=datetime.fromisoformat(result["started_at"]),
+                existing_job = await session.scalar(
+                    sa.select(Job).where(Job.name == job_id)
                 )
-
-        connector = aiohttp.UnixConnector(path=socket_path)
-        async with aiohttp.ClientSession(connector=connector) as session:
-            async with session.get("http://daemon/status") as response:
-                body = await response.json()
-                return RunningJob(
-                    job_id=job_id,
-                    job_dir=job_dir,
-                    pid_file=pid_file,
-                    running=True,
-                    target_pid=body["pid"],
-                    notify_on=body["notify_on"],
-                    started_at=datetime.fromisoformat(body["started_at"]),
-                )
-
-    async def list_running_jobs(self) -> AsyncGenerator[RunningJob, None]:
-        if not os.path.exists(self.pids_dir):
-            return
-
-        job_ids = []
-
-        for filename in os.listdir(self.pids_dir):
-            job_id = filename.rsplit(".", 1)[0]
-            job_ids.append(job_id)
-
-        async for result in self.get_jobs(job_ids):
-            if result.running:
-                yield result
-
-    def get_all_job_ids(self) -> List[str]:
-        if not os.path.exists(self.jobs_dir):
-            return []
-
-        return os.listdir(self.jobs_dir)
-
-    async def get_jobs(self, ids: List[str]) -> AsyncGenerator[RunningJob, None]:
-        tasks = []
-
-        for job_id in ids:
-            tasks.append(asyncio.create_task(self.get_job(job_id)))
-
-        while tasks:
-            done, pending = await asyncio.wait(
-                tasks, return_when=asyncio.FIRST_COMPLETED
-            )
-            for task in done:
-                res = task.result()
-                if res is None:
+                if existing_job is not None:
                     continue
-                yield res
 
-            tasks = pending
+                os.makedirs(self._job_dir(job_id))
+                obj = Job(
+                    name=job_id,
+                    notify_on=notify_on,
+                )
+                session.add(obj)
+                await session.commit()
+                return obj
+
+    async def get_job(self, name: str, not_started: bool = False) -> Optional[Job]:
+        async with self.async_session() as session:
+            query = sa.select(Job).where(Job.name == name)
+            if not_started:
+                query = query.where(Job.started_at == None)
+            return await session.scalar(query)
+
+    async def start_job(self, name: str) -> Job:
+        job = await self.get_job(name)
+        if job is None:
+            raise exc.JobNotFound(name)
+
+        async with self.async_session() as session:
+            job = await session.merge(job, load=False)
+            job.started_at = datetime.utcnow()
+            session.add(job)
+            await session.commit()
+
+            return job
+
+    async def update_job(
+        self,
+        name: str,
+        pid: int = MISSING,
+        command: List[str] = MISSING,
+        notify_on: str = MISSING,
+        notify_status: str = MISSING,
+        channel_id: Optional[str] = MISSING,
+        session_id: str = MISSING,
+    ) -> Job:
+        job = await self.get_job(name)
+        if job is None:
+            raise exc.JobNotFound(name)
+
+        async with self.async_session() as session:
+            job = await session.merge(job, load=False)
+            if pid is not MISSING:
+                job.pid = pid
+            if command is not MISSING:
+                job.command = json.dumps(command)
+            if notify_on is not MISSING:
+                job.notify_on = notify_on
+            if notify_status is not MISSING:
+                job.notify_status = notify_status
+            if channel_id is not MISSING:
+                job.channel_id = channel_id
+            if session_id is not MISSING:
+                job.session_id = session_id
+
+            session.add(job)
+            await session.commit()
+
+            return job
+
+    async def end_job(
+        self,
+        name: str,
+        exit_code: int,
+        error: Exception = MISSING,
+    ) -> Job:
+        job = await self.get_job(name)
+        if job is None:
+            raise exc.JobNotFound(name)
+
+        async with self.async_session() as session:
+            job = await session.merge(job, load=False)
+            job.exit_code = exit_code
+            if error is not MISSING:
+                job.error_type = type(error).__name__
+                job.error = str(error)
+            job.ended_at = datetime.utcnow()
+
+            session.add(job)
+            await session.commit()
+
+            return job
+
+    async def list_jobs(self, running_only: bool = False) -> List[Job]:
+        query = (
+            sa.select(Job).where(Job.started_at != None).order_by(Job.started_at.desc())
+        )
+        if running_only:
+            query = query.where(Job.ended_at == None)
+
+        async with self.async_session() as session:
+            return list(await session.scalars(query))
