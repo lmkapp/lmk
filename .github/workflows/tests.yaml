@@ -56,9 +56,7 @@ jobs:
       - name: Setup python cache
         uses: actions/cache@v3
         with:
-          path: 
-          - ${{ steps.pip-cache.outputs.STORE_PATH }}
-          - ./packages/python-client/.tox
+          path: ${{ steps.pip-cache.outputs.STORE_PATH }} ./packages/python-client/.tox
       - name: Install Python dependencies
         run: |
           cd ./packages/python-client

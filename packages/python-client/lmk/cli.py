@@ -30,8 +30,14 @@ from lmk.utils.logging import setup_logging
 
 def _check_login() -> None:
     instance = get_instance()
-    if not instance.logged_in():
+    if instance.logged_in():
+        return
+
+    resp = click.confirm("You are not logged in; would you like to log in now?")
+    if not resp:
         raise exc.NotLoggedIn()
+
+    instance.login(force=True)
 
 
 cli_args = stack_decorators(

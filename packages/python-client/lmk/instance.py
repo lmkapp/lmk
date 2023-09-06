@@ -497,10 +497,10 @@ class Instance:
         if access_token_expires is None:
             access_token_expires_value = None
 
-        self._config_loaded = False
-        self._access_token = None
-        self._server_url = API_URL
-        self._default_channel = None
+        self._config_loaded: bool = False
+        self._access_token: Optional[str] = None
+        self._server_url: Optional[str] = None
+        self._default_channel: Optional[str] = None
 
         self.loop = loop
         self.client = api_client(
@@ -539,14 +539,18 @@ class Instance:
 
     @property
     def server_url(self) -> str:
-        return self._server_url
+        return self._server_url or API_URL
 
     @server_url.setter
-    def server_url(self, value: str) -> None:
-        if value == self.server_url:
+    def server_url(self, value: Optional[str]) -> None:
+        if value == self._server_url:
             return
         old_value, self._server_url = self._server_url, value
-        self.client.configuration.host = value or API_URL
+        old_effective = old_value or API_URL
+        new_effective = value or API_URL
+
+
+        self.client.configuration.host = value
         server_url_changed.send(
             self,
             old_value=old_value,
@@ -577,7 +581,7 @@ class Instance:
             new_value=value,
         )
 
-    def _load_config(self, force: bool = False) -> None:
+    def _load_config(self, force: bool = False, overwrite: bool = False) -> None:
         if self._config_loaded and not force:
             return
 
@@ -588,23 +592,24 @@ class Instance:
             raise exc.ConfigFileNotFound(self.config_path)
         else:
             config_paths = [self.config_path]
+        
+        read_config_paths = [
+            path for path in config_paths if os.path.isfile(path)
+        ]
 
-        parser.read(config_paths)
+        parser.read(read_config_paths)
         if self.profile in parser:
             section = parser[self.profile]
-            if self.access_token is None:
+            if self.access_token is None or overwrite:
                 self.access_token = section.get("access_token", self.access_token)
-            if self.refresh_token is None:
+            if self.refresh_token is None or overwrite:
                 self.refresh_token = section.get("refresh_token", self.refresh_token)
-            if self.access_token_expires is None:
+            if self.access_token_expires is None or overwrite:
                 self.access_token_expires = section.getint(
                     "access_token_expires", self.access_token_expires
                 )
-            if self.server_url is None:
-                self.server_url = section.get("server_url", self.server_url)
-
-        if self.server_url is None:
-            self.server_url = API_URL
+            if self._server_url is None or overwrite:
+                self.server_url = section.get("server_url", self._server_url)
 
         self._config_loaded = True
 
@@ -625,7 +630,7 @@ class Instance:
             obj["refresh_token"] = self.refresh_token
         if self.access_token_expires is not None:
             obj["access_token_expires"] = self.access_token_expires
-        if self.server_url is not None and self.server_url != API_URL:
+        if self._server_url is not None:
             obj["server_url"] = self.server_url
 
         parser[self.profile] = obj

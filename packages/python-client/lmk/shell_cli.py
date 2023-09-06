@@ -7,7 +7,7 @@ import click
 
 from lmk.cli import cli
 from lmk.process.manager import JobManager
-from lmk.shell_plugin import resolve_pid
+from lmk.process.shell_plugin import resolve_pid
 from lmk.utils import shlex_join
 
 
