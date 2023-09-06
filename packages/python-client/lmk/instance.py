@@ -10,7 +10,18 @@ import threading
 import time
 import webbrowser
 from datetime import datetime, timedelta
-from typing import Optional, List, Any, Dict, AsyncContextManager, Union
+from typing import (
+    Optional,
+    List,
+    Any,
+    Dict,
+    AsyncGenerator,
+    Union,
+    Awaitable,
+    cast,
+    ContextManager,
+    AsyncContextManager,
+)
 
 import aiohttp
 from blinker import signal
@@ -44,9 +55,11 @@ from lmk.generated.models.notification_channel_response import (
     NotificationChannelResponse,
 )
 from lmk.generated.models.create_session_request_state import CreateSessionRequestState
+from lmk.generated.models.process_session_state import ProcessSessionState
+from lmk.generated.models.jupyter_session_state import JupyterSessionState
 from lmk.generated.models.session_response import SessionResponse
 from lmk.jupyter import is_jupyter, run_javascript
-from lmk.utils.asyncio import async_callback
+from lmk.utils.asyncio import async_callback, asyncio_lock
 from lmk.utils.ws import WebSocket, ws_connected
 
 
@@ -95,7 +108,7 @@ def pipeline(is_async: bool = False) -> Any:
     in the pipeline
     """
 
-    def sync_pipeline(*funcs, ctx_managers: List[Any] = ()):
+    def sync_pipeline(*funcs, ctx_managers: List[Any] = []):
         with contextlib.ExitStack() as stack:
             for ctx in ctx_managers:
                 stack.enter_context(ctx)
@@ -105,7 +118,7 @@ def pipeline(is_async: bool = False) -> Any:
                 last_result = func(last_result)
             return last_result
 
-    async def async_pipeline(*funcs, ctx_managers: List[Any] = ()):
+    async def async_pipeline(*funcs, ctx_managers: List[Any] = []):
         async with contextlib.AsyncExitStack() as stack:
             for ctx in ctx_managers:
                 if is_async_context_manager(ctx):
@@ -178,12 +191,17 @@ class Channels:
     </details>
     """
 
-    def __init__(self, instance: "Instance", loop: Optional[asyncio.AbstractEventLoop] = None) -> None:
+    def __init__(
+        self, instance: "Instance", loop: Optional[asyncio.AbstractEventLoop] = None
+    ) -> None:
+        if loop is None:
+            loop = asyncio.get_event_loop()
+
         self.instance = instance
         self._fetch_state = ChannelsState.None_
         self._fetch_lock = threading.Lock()
-        self._afetch_lock = asyncio.Lock(loop=loop)
-        self.data = None
+        self._afetch_lock = asyncio_lock(loop=loop)
+        self.data: Optional[List[NotificationChannelResponse]] = None
 
         @access_token_changed.connect_via(instance)
         def handle_access_token_changed(sender, old_value, new_value):
@@ -243,7 +261,7 @@ class Channels:
 
     @default.setter
     def default(self, value: Optional[Union[str, NotificationChannelResponse]]) -> None:
-        self.instance.default_channel = value
+        self.instance.default_channel = value  # type: ignore
 
     def fetch(self, async_req: bool = False, force: bool = False) -> None:
         """
@@ -261,7 +279,7 @@ class Channels:
         :return: This method does not return anything
         :rtype: None
         """
-        ctx_managers = []
+        ctx_managers: List[Union[ContextManager[Any], AsyncContextManager[Any]]] = []
         if async_req:
             ctx_managers.append(self._afetch_lock)
         ctx_managers.append(self._fetch_lock)
@@ -435,6 +453,8 @@ class Channels:
 class Instance:
     """ """
 
+    access_token_expires: Optional[int]
+
     def __init__(
         self,
         profile: Optional[str] = None,
@@ -442,7 +462,7 @@ class Instance:
         config_path: Optional[str] = None,
         access_token: Optional[str] = None,
         refresh_token: Optional[str] = None,
-        access_token_expires: Optional[datetime] = None,
+        access_token_expires: Optional[Union[datetime, str]] = None,
         logger: Optional[logging.Logger] = None,
         sync_config: bool = True,
         loop: Optional[asyncio.AbstractEventLoop] = None,
@@ -463,20 +483,26 @@ class Instance:
             server_url = os.getenv("LMK_SERVER_URL")
         if logger is None:
             logger = LOGGER
+        if loop is None:
+            loop = asyncio.get_event_loop()
 
+        access_token_expires_value: Optional[int]
         if isinstance(access_token_expires, str) and access_token_expires.isdigit():
-            access_token_expires = int(access_token_expires)
+            access_token_expires_value = int(access_token_expires)
         elif isinstance(access_token_expires, str):
             access_token_expires = parse_dt(access_token_expires)
 
         if isinstance(access_token_expires, datetime):
-            access_token_expires = int(access_token_expires.timestamp() * 1000)
+            access_token_expires_value = int(access_token_expires.timestamp() * 1000)
+        if access_token_expires is None:
+            access_token_expires_value = None
 
         self._config_loaded = False
         self._access_token = None
         self._server_url = API_URL
         self._default_channel = None
 
+        self.loop = loop
         self.client = api_client(
             server_url=server_url or API_URL,
             logger=logger,
@@ -491,8 +517,8 @@ class Instance:
         self.config_path = config_path
         self.access_token = access_token
         self.refresh_token = refresh_token
-        self.access_token_expires = access_token_expires
-        self.server_url = server_url
+        self.access_token_expires = access_token_expires_value
+        self.server_url = cast(str, server_url)
         self.sync_config = sync_config
 
         self._load_config()
@@ -592,7 +618,7 @@ class Instance:
             os.makedirs(config_dir)
 
         parser = configparser.ConfigParser()
-        obj = {}
+        obj: Dict[str, Any] = {}
         if self.access_token is not None:
             obj["access_token"] = self.access_token
         if self.refresh_token is not None:
@@ -614,7 +640,7 @@ class Instance:
         api = HeadlessAuthApi(self.client)
         response = api.refresh_headless_auth_token(
             HeadlessAuthRefreshTokenRequest(
-                app_id=APP_ID, refresh_token=self.refresh_token
+                appId=APP_ID, refreshToken=cast(str, self.refresh_token)
             )
         )
         self.set_access_token(
@@ -634,9 +660,9 @@ class Instance:
 
     async def _refresh_access_token_async(self) -> None:
         api = HeadlessAuthApi(self.client)
-        response = await api.refresh_headless_auth_token(
+        response = await api.refresh_headless_auth_token(  # type: ignore
             HeadlessAuthRefreshTokenRequest(
-                app_id=APP_ID, refresh_token=self.refresh_token
+                appId=APP_ID, refreshToken=cast(str, self.refresh_token)
             ),
             async_req=True,
         )
@@ -655,7 +681,7 @@ class Instance:
 
         return self.access_token
 
-    def _get_access_token(self, async_req: bool = False) -> str:
+    def _get_access_token(self, async_req: bool = False) -> Union[str, Awaitable[str]]:
         if async_req:
             return self._get_access_token_async()
         return self._get_access_token_sync()
@@ -692,7 +718,7 @@ class Instance:
 
         api = HeadlessAuthApi(self.client)
         return api.create_headless_auth_session(
-            CreateHeadlessAuthSessionRequest(app_id=APP_ID, scope=scope),
+            CreateHeadlessAuthSessionRequest(appId=APP_ID, scope=scope),
             async_req=async_req,
         )
 
@@ -726,11 +752,10 @@ class Instance:
     ) -> None:
         self.access_token = access_token
         self.refresh_token = refresh_token
-        self.access_token_expires = access_token_expires
-        if isinstance(self.access_token_expires, datetime):
-            self.access_token_expires = int(
-                self.access_token_expires.timestamp() * 1000
-            )
+        if isinstance(access_token_expires, datetime):
+            self.access_token_expires = int(access_token_expires.timestamp() * 1000)
+        else:
+            self.access_token_expires = access_token_expires
         if self.sync_config:
             self._save_config()
 
@@ -913,7 +938,7 @@ class Instance:
         return pipeline(async_req)(
             lambda _: self._get_access_token(async_req),
             lambda access_token: api.post_event(
-                EventRequest(message=message, content_type=content_type, **kws),
+                EventRequest(message=message, contentType=content_type, **kws),  # type: ignore
                 async_req=async_req,
                 _headers={"Authorization": f"Bearer {access_token}"},
             ),
@@ -922,7 +947,9 @@ class Instance:
     def create_session(
         self,
         name: str,
-        state: Dict[str, Any] = None,
+        state: Optional[
+            Union[Dict[str, Any], ProcessSessionState, JupyterSessionState]
+        ] = None,
         async_req: bool = False,
     ) -> SessionResponse:
         """
@@ -948,16 +975,16 @@ class Instance:
         api = SessionApi(self.client)
 
         if isinstance(state, dict):
-            state = CreateSessionRequestState.from_dict(state)
+            typed_state = CreateSessionRequestState.from_dict(state)
         else:
-            state = CreateSessionRequestState(actual_instance=state)
+            typed_state = CreateSessionRequestState(actual_instance=state)  # type: ignore
 
         return pipeline(async_req)(
             lambda _: self._get_access_token(async_req),
             lambda access_token: api.create_session(
                 CreateSessionRequest(
                     name=name,
-                    state=state,
+                    state=typed_state,
                 ),
                 async_req=async_req,
                 _headers={"Authorization": f"Bearer {access_token}"},
@@ -995,7 +1022,7 @@ class Instance:
     @contextlib.asynccontextmanager
     async def session_connect(
         self, session_id: str, read_only: bool = True
-    ) -> AsyncContextManager[WebSocket]:
+    ) -> AsyncGenerator[WebSocket, None]:
         """
         Connect via a web socket to an interactive session. This allows you to send state
         updates to the session via a web socket, and receive remote state updates initiated
@@ -1030,7 +1057,9 @@ class Instance:
         on_connect_cb = async_callback(on_connect, loop=loop)
 
         async with aiohttp.ClientSession(conn_timeout=10) as session:
-            async with WebSocket(session, url, timeout=0.5, heartbeat=1) as ws:
+            async with WebSocket(
+                session, url, timeout=0.5, heartbeat=1, loop=self.loop
+            ) as ws:
                 await on_connect(ws)
 
                 ws_connected.connect(on_connect_cb, ws)

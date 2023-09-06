@@ -14,7 +14,7 @@ from lmk.utils import shlex_join
 def format_params(values: Dict[str, Any], params: List[click.Parameter]) -> List[str]:
     params_by_name = {param.name: param for param in params}
 
-    out = []
+    out: List[str] = []
     for key, value in values.items():
         if key not in params_by_name:
             continue
@@ -40,7 +40,7 @@ def format_params(values: Dict[str, Any], params: List[click.Parameter]) -> List
 async def process_cmd(
     ctx: click.Context,
     root_args: List[str],
-) -> Dict[str, Any]:
+) -> None:
     manager = JobManager(ctx.params["base_path"])
 
     await manager.setup()

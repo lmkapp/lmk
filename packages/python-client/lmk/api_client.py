@@ -22,7 +22,7 @@ class _ExecutorWrapper:
     def __init__(self, executor: Executor) -> None:
         self.executor = executor
 
-    def apply_async(self, func, args) -> Future:
+    def apply_async(self, func, args) -> asyncio.Future:
         return asyncio.wrap_future(self.executor.submit(func, *args))
 
     def close(self) -> None:

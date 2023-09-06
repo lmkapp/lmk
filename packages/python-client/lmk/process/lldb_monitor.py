@@ -5,7 +5,7 @@ import logging
 import os
 import psutil
 import shutil
-from typing import List
+from typing import List, IO, cast
 
 from lmk.utils.asyncio import check_output
 from lmk.process import exc
@@ -27,7 +27,7 @@ async def check_lldb() -> None:
     process = await asyncio.create_subprocess_shell(
         "lldb --batch -o r -- echo 1",
         stdout=asyncio.subprocess.DEVNULL,
-        stderr=asyncio.subprocess.DEVNULL
+        stderr=asyncio.subprocess.DEVNULL,
     )
     exit_code = await process.wait()
 
@@ -36,7 +36,7 @@ async def check_lldb() -> None:
 
 
 async def run_with_lldb(
-    argv: List[str], log_file: io.BytesIO
+    argv: List[str], log_file: IO[bytes]
 ) -> asyncio.subprocess.Process:
     """ """
     LOGGER.debug("Getting lldb interpreter info")
@@ -75,7 +75,7 @@ class LLDBMonitoredProcess(MonitoredProcess):
         process: asyncio.subprocess.Process,
         pid: int,
         command: List[str],
-        log_file: io.BytesIO,
+        log_file: IO[bytes],
     ) -> None:
         self.process = process
         self.pid = pid
@@ -84,11 +84,14 @@ class LLDBMonitoredProcess(MonitoredProcess):
 
     async def send_signal(self, signum: int) -> None:
         message = json.dumps({"type": "send_signal", "signal": signum}) + "\n"
-        self.process.stdin.write(message.encode())
+        stdin = cast(asyncio.StreamWriter, self.process.stdin)
+        stdin.write(message.encode())
 
     async def wait(self) -> int:
         try:
-            stdout_line = asyncio.create_task(self.process.stdout.readline())
+            stdout = cast(asyncio.StreamReader, self.process.stdout)
+
+            stdout_line = asyncio.create_task(stdout.readline())
             wait_task = asyncio.create_task(self.process.wait())
             while True:
                 await asyncio.wait(
@@ -114,7 +117,7 @@ class LLDBMonitoredProcess(MonitoredProcess):
                             "Unhandled message from monitor process: %s",
                             message.get("type"),
                         )
-                    stdout_line = asyncio.create_task(self.process.stdout.readline())
+                    stdout_line = asyncio.create_task(stdout.readline())
         finally:
             self.log_file.close()
 
@@ -137,8 +140,9 @@ class LLDBProcessMonitor(ProcessMonitor):
         )
         LOGGER.debug("Created lldb process with pid %d", process.pid)
 
+        stdout = cast(asyncio.StreamReader, process.stdout)
         wait_task = asyncio.create_task(process.wait())
-        stdout_task = asyncio.create_task(process.stdout.readline())
+        stdout_task = asyncio.create_task(stdout.readline())
 
         await asyncio.wait(
             [wait_task, stdout_task], return_when=asyncio.FIRST_COMPLETED

@@ -2,7 +2,7 @@ import json
 import os
 import uuid
 from datetime import date, datetime
-from typing import Optional, List
+from typing import Optional, List, Any
 
 import sqlalchemy as sa
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
@@ -11,7 +11,7 @@ from lmk.process import exc
 from lmk.process.models import Base, Job
 
 
-MISSING = object()
+MISSING: Any = object()
 
 
 class JobManager:

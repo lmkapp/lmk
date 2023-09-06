@@ -1,6 +1,6 @@
 import asyncio
 from functools import wraps
-from typing import Optional, Callable
+from typing import Optional, Callable, Any
 
 import click
 
@@ -17,10 +17,12 @@ def async_group(func: Optional[Callable] = None, **kws) -> click.Group:
     if func is not None:
         return dec(func)
 
-    return dec
+    return dec  # type: ignore
 
 
-def async_command(group: click.Group, **kws) -> click.Command:
+def async_command(
+    group: click.Group, **kws
+) -> Callable[[Callable[..., Any]], click.Command]:
     def dec(f):
         @group.command(**kws)
         @wraps(f)

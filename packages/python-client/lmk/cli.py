@@ -1,4 +1,3 @@
-import asyncio
 import click
 import os
 import psutil
@@ -6,7 +5,7 @@ import shlex
 import signal as signal_module
 import sys
 import textwrap
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 
 from lmk.instance import get_instance, set_instance, Instance
 from lmk.process import exc
@@ -16,7 +15,7 @@ from lmk.process.client import send_signal, update_job
 from lmk.process.lldb_monitor import LLDBProcessMonitor, check_lldb
 from lmk.process.manager import JobManager
 from lmk.process.run import run_foreground, run_daemon
-from lmk.shell_plugin import (
+from lmk.process.shell_plugin import (
     detect_shell,
     install_script,
     uninstall_script,
@@ -66,9 +65,8 @@ async def cli(ctx: click.Context, log_level: str, base_path: str):
 
     ctx.obj["manager"] = manager
 
-    event_loop = asyncio.get_event_loop()
-
-    set_instance(Instance(loop=event_loop))
+    config_path = os.path.join(base_path, "config")
+    set_instance(Instance(config_path=config_path))
 
 
 @cli.command(
@@ -80,7 +78,7 @@ async def cli(ctx: click.Context, log_level: str, base_path: str):
 @click.option(
     "--force/--no-force",
     is_flag=True,
-    default=True,
+    default=False,
     help=(
         "By default, this will be a no-op if you are already logged in. Pass --force to "
         "force the CLI to re-authenticate with LMK."
@@ -215,11 +213,11 @@ async def monitor(
     notify: str,
     job: str,
 ):
-    pid, _ = resolve_pid(pid)
+    resolved_pid, _ = resolve_pid(pid)
 
     manager: JobManager = ctx.obj["manager"]
     if name is None:
-        proc = psutil.Process(pid)
+        proc = psutil.Process(resolved_pid)
         name = proc.cmdline()[0]
 
     _check_login()
@@ -237,7 +235,7 @@ async def monitor(
 
     click.secho(f"Job ID: {job_obj.name}", fg="green", bold=True)
 
-    monitor = LLDBProcessMonitor(pid)
+    monitor = LLDBProcessMonitor(resolved_pid)
 
     await run_daemon(job_obj.name, monitor, manager, ctx.obj["log_level"])
 
@@ -304,7 +302,7 @@ async def jobs(ctx: click.Context, all: bool):
         )
     )
     for job in jobs:
-        state_kwargs = {}
+        state_kwargs: Dict[str, Any] = {}
         if job.ended_at:
             exit_str = job.exit_code if job.exit_code is not None else "?"
             if job.exit_code == 0:
@@ -334,7 +332,7 @@ async def jobs(ctx: click.Context, all: bool):
                     pad(str(job.pid), 10),
                     pad(state, 12, **state_kwargs),
                     pad(notify_on, 10, **notify_on_kwargs),
-                    pad(job.started_at.isoformat(), 30),
+                    pad(job.started_at.isoformat() if job.started_at else "", 30),
                 ]
             )
         )
@@ -360,6 +358,7 @@ async def kill(ctx: click.Context, job_id: str, signal: str):
     if not job.is_running():
         raise exc.JobNotRunning(job_id)
 
+    signal_value: Optional[int]
     if signal.isdigit():
         signal_value = int(signal)
     else:

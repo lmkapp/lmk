@@ -25,7 +25,7 @@ class MonitoredChildProcess(MonitoredProcess):
         self.output_path = output_path
 
     @property
-    def pid(self) -> int:
+    def pid(self) -> int:  # type: ignore
         return self.process.pid
 
     async def send_signal(self, signum: int) -> None:

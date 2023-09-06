@@ -2,13 +2,19 @@ import asyncio
 import contextlib
 import json
 import logging
-from typing import Any, Optional
+from typing import Any, Optional, AsyncGenerator
 
 import aiohttp
 from blinker import signal
 
 from lmk.utils.blinker import wait_for_signal
-from lmk.utils.asyncio import async_retry, RetryRule
+from lmk.utils.asyncio import (
+    async_retry,
+    RetryRule,
+    asyncio_queue,
+    asyncio_event,
+    asyncio_future,
+)
 
 
 LOGGER = logging.getLogger(__name__)
@@ -31,18 +37,20 @@ class WebSocket:
         session: aiohttp.ClientSession,
         url: str,
         retry_rule: Optional[RetryRule] = None,
+        loop: Optional[asyncio.AbstractEventLoop] = None,
         **kwargs,
     ) -> None:
         self.session = session
         self.url = url
         self.kwargs = kwargs
         self.retry_rule = retry_rule
+        self.loop = loop
 
-        self.queue = asyncio.Queue()
+        self.queue = asyncio_queue(loop=loop)
         self.ws: Optional[aiohttp.ClientWebSocketResponse] = None
         self.ws_ctx = None
         self.send_task: Optional[asyncio.Task] = None
-        self.close_event = asyncio.Event()
+        self.close_event = asyncio_event(loop=loop)
 
     def _check_state(self, initialized: bool) -> None:
         if self.ws is None and initialized:
@@ -109,16 +117,16 @@ class WebSocket:
         :return: This method does not return anything
         :rtype: None
         """
-        future = asyncio.Future()
+        future = asyncio_future(loop=self.loop)
         await self.queue.put((data, future))
         await future
 
-    async def _iterate(self):
+    async def _iterate(self) -> AsyncGenerator[Any, None]:
         self._check_state(True)
 
         close_message: Optional[aiohttp.WSMessage] = None
         while True:
-            message = await self.ws.receive()
+            message = await self.ws.receive()  # type: ignore
             LOGGER.debug("Received message %s", message)
             if message.type == aiohttp.WSMsgType.CLOSED:
                 if close_message is None and not self.close_event.is_set():
@@ -156,7 +164,7 @@ class WebSocket:
                 await self._setup()
             except GeneratorExit:
                 break
-            except asyncio.exceptions.CancelledError:
+            except asyncio.CancelledError:
                 raise
             except:
                 LOGGER.exception("Unexpected error in websocket")
@@ -168,7 +176,7 @@ class WebSocket:
         if self.ws is None:
             connect_task = wait_for_signal(ws_connected, self)
         else:
-            connect_task = asyncio.Future()
+            connect_task = asyncio_future(loop=self.loop)
             connect_task.set_result(None)
 
         async def queue_get():

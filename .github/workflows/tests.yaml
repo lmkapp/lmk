@@ -1,0 +1,37 @@
+name: Run tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+
+  test:
+
+    runs-on: ubuntu-latest
+    # runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        # os: [ubuntu-18.04]
+        python: [3.6, 3.7, 3.8, 3.9, 3.10, 3.11]
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Install dependencies
+        working-directory: ./packages/python-client
+        run: |
+          python -m venv venv
+          . venv/bin/activate
+          pip install -e '.[dev]'
+      # `types,cli,jupyter` only needed for this, might remove later
+      - name: Run tests
+        working-directory: ./packages/python-client
+        run: |
+          . venv/bin/activate
+          tox -e test,type --parallel

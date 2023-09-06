@@ -44,7 +44,7 @@ from lmk.jupyter.notebook_info import (
     kernel_id,
 )
 from lmk.jupyter.utils import background_ctx
-from lmk.utils.asyncio import loop_ctx
+from lmk.utils.asyncio import loop_ctx, asyncio_event, asyncio_lock, asyncio_queue
 from lmk.utils.logging import setup_logging
 from lmk.utils.ws import WebSocket
 
@@ -215,12 +215,13 @@ class LMKWidgetThread(threading.Thread):
         self.shutdown_event = threading.Event()
         self.history = IPythonHistory()
         self.info_watcher = NotebookInfoWatcher()
-        self._cancel_auth = asyncio.Event()
+        self.loop = asyncio.new_event_loop()
+        self._cancel_auth = asyncio_event(loop=self.loop)
         self._register_shutdown_hook()
         self._setup_logging()
 
     def _setup_logging(
-        self, level: Optional[int] = None, file: Optional[str] = None
+        self, level: Optional[str] = None, file: Optional[str] = None
     ) -> None:
         if level is None:
             level = self.widget.log_level
@@ -271,14 +272,14 @@ class LMKWidgetThread(threading.Thread):
 
         try:
             self.widget.auth_state = AuthState.AuthInProgress
-            session = await instance.initiate_auth(async_req=True)
+            session = await instance.initiate_auth(async_req=True)  # type: ignore
             self.widget.auth_url = session.authorize_url
 
             cancellation_wait_task = asyncio.create_task(self._cancel_auth.wait())
 
             while time.time() - start < timeout and not self._cancel_auth.is_set():
                 try:
-                    response = await instance.retrieve_auth_token(
+                    response = await instance.retrieve_auth_token(  # type: ignore
                         session_id=session.session_id, async_req=True
                     )
                 except exc.AuthSessionNotComplete:
@@ -334,7 +335,7 @@ class LMKWidgetThread(threading.Thread):
             LOGGER.info(f"Skipping channel fetch because it is in progress")
             return
 
-        await instance.channels.fetch(async_req=True, force=True)
+        await instance.channels.fetch(async_req=True, force=True)  # type: ignore
 
     async def _handle_request_inner(self, request):
         method = request["method"]
@@ -459,7 +460,7 @@ class LMKWidgetThread(threading.Thread):
                     f"Ended: {format_date(date_from_millis(self.widget.jupyter_cell_finished_at))}"
                 )
 
-            response = await instance.notify(message=message, async_req=True, **kws)
+            response = await instance.notify(message=message, async_req=True, **kws)  # type: ignore
             LOGGER.info("Notification sent. Response: %s", response.to_dict())
             self.widget.sent_notifications = (
                 self.widget.sent_notifications + [response.to_dict()]
@@ -659,7 +660,7 @@ class LMKWidgetThread(threading.Thread):
             access_token = await instance._get_access_token_async()
             if access_token:
                 try:
-                    await api.get_current_app(
+                    await api.get_current_app(  # type: ignore
                         async_req=True,
                         _headers={"Authorization": f"Bearer {access_token}"},
                     )
@@ -682,13 +683,13 @@ class LMKWidgetThread(threading.Thread):
     def _session_ctx(self, loop: asyncio.AbstractEventLoop):
         instance = get_instance()
 
-        lock = asyncio.Lock()
+        lock = asyncio_lock(loop=loop)
 
         session: Optional[SessionResponse] = None
 
         connect_task: Optional[asyncio.Task] = None
 
-        queue = asyncio.Queue()
+        queue = asyncio_queue(loop=loop)
 
         def date_or_null(value):
             if not value:
@@ -845,8 +846,8 @@ class LMKWidgetThread(threading.Thread):
             if connect_task is not None:
                 connect_task.cancel()
 
-            with contextlib.suppress(asyncio.CancelledError):
-                loop.run_until_complete(connect_task)
+                with contextlib.suppress(asyncio.CancelledError):
+                    loop.run_until_complete(connect_task)
 
             self.widget.unobserve(handle_change, watch_properties)
 
@@ -857,10 +858,10 @@ class LMKWidgetThread(threading.Thread):
     def run(self) -> None:
         with contextlib.ExitStack() as stack:
             stack.enter_context(background_ctx(LOGGER, type(self).__name__))
-            loop = asyncio.new_event_loop()
-            stack.enter_context(loop_ctx(loop))
-            stack.enter_context(self._session_ctx(loop))
+            stack.enter_context(loop_ctx(self.loop))
+            stack.enter_context(self._session_ctx(self.loop))
 
+            loop = self.loop
             unobserve_widget = self._observe_widget(loop)
             unobserve_instance = self._observe_instance(loop)
             unobserve_jupyter = self._observe_jupyter(loop)

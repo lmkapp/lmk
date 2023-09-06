@@ -3,8 +3,9 @@ import io
 import logging
 import signal
 import sys
-from typing import Optional
+from typing import Optional, IO
 
+from lmk.process import exc
 from lmk.process.client import send_signal, wait_for_job
 from lmk.process.manager import JobManager
 from lmk.utils import wait_for_socket, shutdown_process, socket_exists, input_async
@@ -37,11 +38,12 @@ class ProcessAttachment:
             exit_code = resp["exit_code"]
         else:
             job = await self.manager.get_job(self.job_name)
+            if job is None:
+                raise exc.JobNotFound(self.job_name)
+
             exit_code = job.exit_code
             if exit_code is None:
-                raise RuntimeError(
-                    f"Job {self.job_id} exited unexpectedly, unable to retrieve result"
-                )
+                raise exc.JobExitedUnexpectedly(job)
 
         LOGGER.info("Job %s exited with code %d", self.job_name, exit_code)
         await self.stop()
@@ -51,8 +53,8 @@ class ProcessAttachment:
 async def attach(
     job_name: str,
     manager: JobManager,
-    stdout_stream: io.BytesIO = sys.stdout,
-    stderr_stream: io.BytesIO = sys.stderr,
+    stdout_stream: IO[str] = sys.stdout,
+    stderr_stream: IO[str] = sys.stderr,
 ) -> ProcessAttachment:
     log_file = manager.output_file(job_name)
     socket_path = manager.socket_file(job_name)
@@ -76,8 +78,8 @@ async def attach(
 async def attach_simple(
     job_name: str,
     manager: JobManager,
-    stdout_stream: io.BytesIO = sys.stdout,
-    stderr_stream: io.BytesIO = sys.stderr,
+    stdout_stream: IO[str] = sys.stdout,
+    stderr_stream: IO[str] = sys.stderr,
 ) -> int:
     attachment = await attach(job_name, manager, stdout_stream, stderr_stream)
     try:

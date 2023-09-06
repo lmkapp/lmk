@@ -1,8 +1,8 @@
 import asyncio
-import json
 import os
 import signal
 
+from lmk.process import exc
 from lmk.process.attach import attach_simple
 from lmk.process.client import wait_for_job
 from lmk.process.daemon import ProcessMonitorController, ProcessMonitorDaemon, pid_ctx
@@ -60,4 +60,7 @@ async def run_daemon(
         return
 
     job = await manager.get_job(job_name)
-    raise Exception(f"{job.error_type}: {job.error}")
+    if job is None:
+        raise exc.JobNotFound(job_name)
+
+    raise exc.JobRaisedError(job)

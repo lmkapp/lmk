@@ -1,6 +1,5 @@
-import io
 from logging.config import dictConfig
-from typing import Optional
+from typing import Optional, IO, Dict, Any
 
 
 LOG_FORMAT = "%(asctime)s [%(name)s - %(levelname)s] %(message)s"
@@ -11,9 +10,9 @@ def setup_logging(
     level: str = "INFO",
     format: str = LOG_FORMAT,
     log_file: Optional[str] = None,
-    log_stream: Optional[io.StringIO] = None,
+    log_stream: Optional[IO[str]] = None,
 ) -> None:
-    handler_kwargs = {"class": "logging.StreamHandler"}
+    handler_kwargs: Dict[str, Any] = {"class": "logging.StreamHandler"}
     if log_file is not None:
         handler_kwargs = {"class": "logging.FileHandler", "filename": log_file}
     elif log_stream is not None:

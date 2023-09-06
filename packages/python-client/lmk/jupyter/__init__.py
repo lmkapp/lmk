@@ -22,7 +22,7 @@ else:
     from lmk.jupyter.magics import register_magics
 
     __all__ += ["get_widget", "set_widget", "IPythonMonitoringState"]
-    __all__ += methods.__all__
+    __all__ += methods.__all__  # type: ignore
 
     def __getattr__(name: str):
         if name in globals():

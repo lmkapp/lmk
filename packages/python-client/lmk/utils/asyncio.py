@@ -6,7 +6,7 @@ import signal
 import sys
 import time
 from functools import partial, wraps
-from typing import Optional, Awaitable, Any, AsyncContextManager, List, Callable
+from typing import Optional, Awaitable, Any, AsyncGenerator, List, Callable, Dict
 
 from lmk.utils.os import socket_exists
 
@@ -85,6 +85,7 @@ async def shutdown_process(
             pass
 
     process.kill()
+    return await wait
 
 
 def asyncio_create_task(
@@ -109,7 +110,7 @@ def asyncio_create_task(
 async def async_signal_handler_ctx(
     signals: List[Any],
     handler: Callable[[int], Awaitable[None]],
-) -> AsyncContextManager[None]:
+) -> AsyncGenerator[None, None]:
     loop = asyncio.get_running_loop()
 
     tasks = []
@@ -147,7 +148,7 @@ async def wait_for_socket(
 
 async def wait_for_fd(fd: int) -> None:
     loop = asyncio.get_running_loop()
-    future = asyncio.Future()
+    future: asyncio.Future = asyncio.Future()
     loop.add_reader(fd, future.set_result, None)
     future.add_done_callback(lambda f: loop.remove_reader(fd))
     await future
@@ -161,7 +162,7 @@ async def input_async(prompt: str) -> str:
 
 
 async def check_output(args: List[str]) -> str:
-    kws = {}
+    kws: Dict[str, Any] = {}
     if sys.version_info < (3, 10):
         kws["loop"] = asyncio.get_running_loop()
 
@@ -170,7 +171,7 @@ async def check_output(args: List[str]) -> str:
         stdin=asyncio.subprocess.PIPE,
         stdout=asyncio.subprocess.PIPE,
         stderr=asyncio.subprocess.PIPE,
-        **kws
+        **kws,  # type: ignore
     )
     LOGGER.debug("HERE %s", proc)
     stdout, stderr = await proc.communicate()
@@ -246,7 +247,7 @@ def async_retry(func: Optional[Callable] = None, *, rule: Optional[RetryRule] = 
 
 
 def async_callback(
-    func: Optional[Callable[[], Any]] = None,
+    func: Optional[Callable[..., Any]] = None,
     *,
     loop: Optional[asyncio.AbstractEventLoop] = None,
 ):
@@ -279,3 +280,45 @@ def async_callback(
         return dec
 
     return dec(func)
+
+
+def asyncio_event(loop: Optional[asyncio.AbstractEventLoop] = None) -> asyncio.Event:
+    """
+    The `loop` parameter was removed in python 3.10
+    """
+    kws: Dict[str, Any] = {}
+    if sys.version_info < (3, 10):
+        kws["loop"] = loop or asyncio.get_event_loop()
+    return asyncio.Event(**kws)
+
+
+def asyncio_lock(loop: Optional[asyncio.AbstractEventLoop] = None) -> asyncio.Lock:
+    """
+    The `loop` parameter was removed in python 3.10
+    """
+    kws: Dict[str, Any] = {}
+    if sys.version_info < (3, 10):
+        kws["loop"] = loop or asyncio.get_event_loop()
+    return asyncio.Lock(**kws)
+
+
+def asyncio_queue(
+    maxsize: int = 0, loop: Optional[asyncio.AbstractEventLoop] = None
+) -> asyncio.Queue:
+    """
+    The `loop` parameter was removed in python 3.10
+    """
+    kws: Dict[str, Any] = {}
+    if sys.version_info < (3, 10):
+        kws["loop"] = loop or asyncio.get_event_loop()
+    return asyncio.Queue(maxsize, **kws)
+
+
+def asyncio_future(loop: Optional[asyncio.AbstractEventLoop] = None) -> asyncio.Future:
+    """
+    The `loop` parameter was removed in python 3.10
+    """
+    kws: Dict[str, Any] = {}
+    if sys.version_info < (3, 10):
+        kws["loop"] = loop or asyncio.get_event_loop()
+    return asyncio.Future(**kws)
