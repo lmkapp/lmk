@@ -30,8 +30,6 @@ jobs:
         with:
           version: 7
           run_install: false
-      - name: Install node dependencies
-        run: pnpm install --filter @lmkapp/jupyter-widget...
       - name: Get pnpm store directory
         id: pnpm-cache
         run: |
@@ -43,6 +41,8 @@ jobs:
           key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
           restore-keys: |
             ${{ runner.os }}-pnpm-store-
+      - name: Install node dependencies
+        run: pnpm install --filter @lmkapp/jupyter-widget...
 
       # Python stuff
       - name: Set up Python
