@@ -57,6 +57,9 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ${{ steps.pip-cache.outputs.STORE_PATH }} ./packages/python-client/.tox
+          key: ${{ runner.os }}-python-${{ hashFiles('**/pyproject.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-python-
       - name: Install Python dependencies
         run: |
           cd ./packages/python-client
