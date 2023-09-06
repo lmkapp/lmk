@@ -50,11 +50,12 @@ jobs:
         with:
           python-version: ${{ matrix.python }}
       - name: Install Python dependencies
-          working-directory: ./packages/python-client
-          run: |
-            python -m venv venv
-            . venv/bin/activate
-            pip install -e '.[dev]'
+        run: |
+          cd ./packages/python-client
+          pnpm generate
+          python -m venv venv
+          . venv/bin/activate
+          pip install -e '.[dev]'
       # `types,cli,jupyter` only needed for this, might remove later
       - name: Run tests
         working-directory: ./packages/python-client
