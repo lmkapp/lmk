@@ -39,7 +39,7 @@ dependencies = [
     "urllib3<2",
     "aiohttp<4"
 ]
-version = "0.1.2.dev0"
+version = "1.0.3.dev0"
 
 [project.optional-dependencies]
 cli = ["click<9", "sqlalchemy[asyncio]>=2,<3", "aiosqlite<1", "psutil"]

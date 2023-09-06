@@ -546,9 +546,6 @@ class Instance:
         if value == self._server_url:
             return
         old_value, self._server_url = self._server_url, value
-        old_effective = old_value or API_URL
-        new_effective = value or API_URL
-
 
         self.client.configuration.host = value
         server_url_changed.send(

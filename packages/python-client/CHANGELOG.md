@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Add type checking with `mypy`
+
+- Fix more compatiblility issues w/ older Python versions.
+
 ## [0.1.2] - 2023-09-02
 
 - Fix config file usage; everything was being overwritten on instantiation of the `Instance`.
