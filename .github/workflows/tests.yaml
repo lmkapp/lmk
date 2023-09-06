@@ -54,7 +54,7 @@ jobs:
         run: |
           echo "STORE_PATH=$(venv/bin/pip cache dir)"
       - name: Setup python cache
-        use: actions/cache@v3
+        uses: actions/cache@v3
         with:
           path: 
           - ${{ steps.pip-cache.outputs.STORE_PATH }}
