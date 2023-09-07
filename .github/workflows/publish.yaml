@@ -61,6 +61,7 @@ jobs:
       - name: Build NPM package
         run: |
           cd ./packages/python-client
+          . venv/bin/activate
           pnpm build:publish
       - name: Publish NPM package
         run: |
@@ -69,11 +70,13 @@ jobs:
       - name: Build Python package
         run: |
           cd ./packages/python-client
+          . venv/bin/activate
           pnpm build:python
           pnpm pypi-check
       - name: Publish Python package
         run: |
           cd ./packages/python-client
+          . venv/bin/activate
           pnpm pypi-upload
       - name: Create Release
         uses: softprops/action-gh-release@v1
