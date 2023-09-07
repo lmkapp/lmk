@@ -66,7 +66,8 @@
     "test:python": "venv/bin/py.test -vv tests",
     "check:python": "venv/bin/mypy && venv/bin/black --check lmk",
     "tox": "venv/bin/tox",
-    "npm-publish": "pnpm readme:npm && pnpm publish --access public --no-git-checks; pnpm readme:git"
+    "npm-publish": "./publish.sh",
+    "test:blah": "echo HERE $([[ $(cat package.json | jq -r .version) = \"0\" ]] && echo abc || echo def)"
   },
   "dependencies": {
     "@jupyter-widgets/base": "^1.1.10 || ^2 || ^3 || ^4 || ^5 || ^6",
