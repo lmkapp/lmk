@@ -67,12 +67,18 @@ jobs:
         run: |
           cd ./packages/python-client
           pnpm npm-publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
       - name: Build Python package
         run: |
           cd ./packages/python-client
           . venv/bin/activate
           pnpm build:python
           pnpm pypi-check
+        env:
+          TWINE_NON_INTERACTIVE: "true"
+          TWINE_USERNAME: ${{ secrets.TWINE_USERNAME }}
+          TWINE_PASSWORD: ${{ secrest.TWINE_PASSWORD }}
       - name: Publish Python package
         run: |
           cd ./packages/python-client
