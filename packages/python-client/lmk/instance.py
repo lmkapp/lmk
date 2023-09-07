@@ -192,15 +192,12 @@ class Channels:
     """
 
     def __init__(
-        self, instance: "Instance", loop: Optional[asyncio.AbstractEventLoop] = None
+        self, instance: "Instance"
     ) -> None:
-        if loop is None:
-            loop = asyncio.get_event_loop()
-
         self.instance = instance
         self._fetch_state = ChannelsState.None_
         self._fetch_lock = threading.Lock()
-        self._afetch_lock = asyncio_lock(loop=loop)
+        self._afetch_lock = asyncio_lock()
         self.data: Optional[List[NotificationChannelResponse]] = None
 
         @access_token_changed.connect_via(instance)
@@ -465,7 +462,6 @@ class Instance:
         access_token_expires: Optional[Union[datetime, str]] = None,
         logger: Optional[logging.Logger] = None,
         sync_config: bool = True,
-        loop: Optional[asyncio.AbstractEventLoop] = None,
     ) -> None:
         if profile is None:
             profile = os.getenv("LMK_PROFILE")
@@ -483,8 +479,6 @@ class Instance:
             server_url = os.getenv("LMK_SERVER_URL")
         if logger is None:
             logger = LOGGER
-        if loop is None:
-            loop = asyncio.get_event_loop()
 
         access_token_expires_value: Optional[int]
         if isinstance(access_token_expires, str) and access_token_expires.isdigit():
@@ -502,12 +496,11 @@ class Instance:
         self._server_url: Optional[str] = None
         self._default_channel: Optional[str] = None
 
-        self.loop = loop
         self.client = api_client(
             server_url=server_url or API_URL,
             logger=logger,
         )
-        self.channels = Channels(self, loop=loop)
+        self.channels = Channels(self)
 
         # Set this to False before loading initial values so that we
         # don't overwrite things.
@@ -1060,7 +1053,7 @@ class Instance:
 
         async with aiohttp.ClientSession(conn_timeout=10) as session:
             async with WebSocket(
-                session, url, timeout=0.5, heartbeat=1, loop=self.loop
+                session, url, timeout=0.5, heartbeat=1
             ) as ws:
                 await on_connect(ws)
 
