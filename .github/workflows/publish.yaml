@@ -14,7 +14,7 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: '18'
-          registry-url: 'https://registry.npmjs.org'
+          registry-url: 'https://registry.npmjs.org/'
       # PNPM stuff
       - name: Install pnpm
         uses: pnpm/action-setup@v2
@@ -76,15 +76,15 @@ jobs:
           . venv/bin/activate
           pnpm build:python
           pnpm pypi-check
-        env:
-          TWINE_NON_INTERACTIVE: "true"
-          TWINE_USERNAME: ${{ secrets.TWINE_USERNAME }}
-          TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
       - name: Publish Python package
         run: |
           cd ./packages/python-client
           . venv/bin/activate
           pnpm pypi-upload
+        env:
+          TWINE_NON_INTERACTIVE: "true"
+          TWINE_USERNAME: ${{ secrets.TWINE_USERNAME }}
+          TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
