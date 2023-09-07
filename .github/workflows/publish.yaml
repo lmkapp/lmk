@@ -88,4 +88,4 @@ jobs:
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
-          files: dist/lmkapp-*
+          files: ./packages/python-client/dist/lmkapp-*
