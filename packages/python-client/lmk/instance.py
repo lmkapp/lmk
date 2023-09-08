@@ -191,9 +191,7 @@ class Channels:
     </details>
     """
 
-    def __init__(
-        self, instance: "Instance"
-    ) -> None:
+    def __init__(self, instance: "Instance") -> None:
         self.instance = instance
         self._fetch_state = ChannelsState.None_
         self._fetch_lock = threading.Lock()
@@ -582,10 +580,8 @@ class Instance:
             raise exc.ConfigFileNotFound(self.config_path)
         else:
             config_paths = [self.config_path]
-        
-        read_config_paths = [
-            path for path in config_paths if os.path.isfile(path)
-        ]
+
+        read_config_paths = [path for path in config_paths if os.path.isfile(path)]
 
         parser.read(read_config_paths)
         if self.profile in parser:
@@ -1052,9 +1048,7 @@ class Instance:
         on_connect_cb = async_callback(on_connect, loop=loop)
 
         async with aiohttp.ClientSession(conn_timeout=10) as session:
-            async with WebSocket(
-                session, url, timeout=0.5, heartbeat=1
-            ) as ws:
+            async with WebSocket(session, url, timeout=0.5, heartbeat=1) as ws:
                 await on_connect(ws)
 
                 ws_connected.connect(on_connect_cb, ws)

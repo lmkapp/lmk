@@ -436,7 +436,7 @@ class LMKWidgetThread(threading.Thread):
 
             if self.widget.jupyter_cell_state == IPythonCellStateType.Error:
                 message = (
-                    f"Notebook [**{self.widget.notebook_name}.ipynb**]({self.widget.url}) "
+                    f"Notebook [**{self.widget.notebook_name}**]({self.widget.url}) "
                     f"**failed** during execution **\\[{self.widget.jupyter_execution_num}\\]**:\n"
                     f"```python\n{self.widget.jupyter_cell_text}\n```\n\n"
                     f"Error:\n```\n{self.widget.jupyter_cell_error}\n```\n\n"
@@ -445,7 +445,7 @@ class LMKWidgetThread(threading.Thread):
                 )
             elif self.widget.jupyter_cell_state == IPythonCellStateType.Cancelled:
                 message = (
-                    f"Notebook [**{self.widget.notebook_name}.ipynb**]({self.widget.url}) "
+                    f"Notebook [**{self.widget.notebook_name}**]({self.widget.url}) "
                     f"was **cancelled** during execution **\\[{self.widget.jupyter_execution_num}\\]**:\n"
                     f"```python\n{self.widget.jupyter_cell_text}\n```\n\n"
                     f"Started: {format_date(date_from_millis(self.widget.jupyter_cell_started_at))}\n\n"
@@ -453,7 +453,7 @@ class LMKWidgetThread(threading.Thread):
                 )
             else:
                 message = (
-                    f"Notebook [**{self.widget.notebook_name}.ipynb**]({self.widget.url}) "
+                    f"Notebook [**{self.widget.notebook_name}**]({self.widget.url}) "
                     f"**stopped** after execution **\\[{self.widget.jupyter_execution_num}\\]**:\n"
                     f"```python\n{self.widget.jupyter_cell_text}\n```\n\n"
                     f"Started: {format_date(date_from_millis(self.widget.jupyter_cell_started_at))}\n\n"
