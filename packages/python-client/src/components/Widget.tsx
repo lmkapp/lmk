@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { useColabSupport } from '../hooks/colab';
 import { useWidgetModelState } from '../lib/widget-model';
 import Auth from './Auth';
 import Layout from './Layout';
@@ -37,6 +38,8 @@ export default function Widget() {
   const [widgetState] = useWidgetModelState('auth_state');
   const [url, setUrl] = useWidgetModelState('url');
   const windowUndefined = typeof window === 'undefined';
+
+  useColabSupport();
 
   useEffect(() => {
     const ivl = setInterval(() => {
