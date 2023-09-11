@@ -1,4 +1,4 @@
-VERSION = "1.0.3.dev10"
+VERSION = "1.0.3.dev11"
 
 API_URL = "https://api.lmkapp.dev"
 
