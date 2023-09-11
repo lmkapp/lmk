@@ -6,9 +6,9 @@ export function useColabSupport(): void {
     if (event?.type === "colab-update" && typeof google !== "undefined") {
       // console.log(Date.now(), "Invoking sync function");
       await google.colab.kernel.invokeFunction("lmk.widget.sync", []);
-      // await new Promise((resolve) => setTimeout(resolve, 500));
+      await new Promise((resolve) => setTimeout(resolve, 500));
       // console.log(Date.now(), "Re-invoking sync function");
-      // await google.colab.kernel.invokeFunction("lmk.widget.sync", []);
+      await google.colab.kernel.invokeFunction("lmk.widget.sync", []);
     }
   });
 }
