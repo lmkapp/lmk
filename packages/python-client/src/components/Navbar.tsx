@@ -96,7 +96,7 @@ export default function Navbar() {
           >
             <FontAwesomeIcon
               icon={faBars}
-              className="lmk-cursor-pointer lmk-text-lg lmk-w-5 lmk-h-5"
+              className="lmk-cursor-pointer lmk-text-lg lmk-w-5 lmk-h-5 lmk-text-font"
             />
           </button>
         </div>

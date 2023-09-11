@@ -4,14 +4,14 @@ module.exports = {
   content: ["./src/**/*.tsx"],
   theme: {
     colors: {
-      font: 'rgba(0, 0, 0, 1)',
-      link: '#05a',
-      editorBorder: '#e0e0e0',
-      success: '#1b5e20',
-      error: '#b71c1c',
-      warn: '#e65100',
-      cellBg: '#f8f8f8',
-      bgLight: '#eeeeee',
+      font: 'var(--colab-primary-text-color, var(--jp-ui-font-color0, rgba(0, 0, 0, 1)))',
+      link: 'var(--jp-mirror-editor-variable-2-color, #05a)',
+      editorBorder: 'var(--colab-border-color, var(--jp-cell-editor-border-color, #e0e0e0))',
+      success: 'var(--jp-success-color0, #1b5e20)',
+      error: 'var(--jp-error-color0, #b71c1c)',
+      warn: 'var(--jp-warn-color0, #e65100)',
+      cellBg: 'var(--code-cell-background, var(--jp-layout-color1, #f8f8f8))',
+      bgLight: 'var(--colab-highlighted-surface-color, var(--jp-layout-color2, #eeeeee))',
       transparent: 'transparent',
     },
     fontFamily: {
