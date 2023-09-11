@@ -8,3 +8,13 @@ declare const IPython: {
     notebook_name: string;
   };
 };
+
+declare const google:
+  | undefined
+  | {
+      colab: {
+        kernel: {
+          invokeFunction: (name: string, args: string[]) => Promise<void>;
+        };
+      };
+    };

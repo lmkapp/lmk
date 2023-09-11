@@ -19,6 +19,7 @@ except ImportError:
     pass
 else:
     from lmk.jupyter import methods
+    from lmk.jupyter.colab import enable_google_colab_support
     from lmk.jupyter.magics import register_magics
 
     __all__ += ["get_widget", "set_widget", "IPythonMonitoringState"]
@@ -32,3 +33,4 @@ else:
         raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
     register_magics(raise_on_no_shell=False)
+    enable_google_colab_support()
