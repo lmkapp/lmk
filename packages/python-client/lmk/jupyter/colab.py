@@ -54,7 +54,9 @@ def enable_google_colab_support(check_if_colab: bool = True) -> None:
         return
 
     def widget_update():
-        get_widget().send_state()
+        with background_ctx(LOGGER, "colab.enable_google_colab_support"):
+            LOGGER.debug("Sending widget state for colab support")
+            get_widget().send_state()
 
     if not CALLBACK_REGISTERED:
         output.register_callback("lmk.widget.sync", widget_update)
@@ -83,7 +85,7 @@ def sync_widget_state_for_colab(widget: DOMWidget) -> Callable[[], None]:
     """ """
 
     def handle_update(info):
-        with background_ctx(LOGGER, "colab.sync_widget_state"):
+        with background_ctx(LOGGER, "colab.sync_widget_state_for_colab"):
             widget.comm.send({"method": "custom", "content": {"type": "colab-update"}})
 
     widget.observe(handle_update)
