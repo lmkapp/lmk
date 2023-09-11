@@ -1,17 +1,9 @@
-import { useEffect } from "react";
+import { useWidgetModelEvent } from "../lib/widget-model";
 
 export function useColabSupport(): void {
-  useEffect(() => {
-    if (!google) {
-      return;
+  useWidgetModelEvent("msg:custom", async (_, event) => {
+    if (event?.type === "collab-update" && typeof google !== "undefined") {
+      await google.colab.kernel.invokeFunction("lmk.widget.sync", []);
     }
-
-    const ivl = setInterval(async () => {
-      await google!.colab.kernel.invokeFunction("lmk.widget.sync", []);
-    }, 1000);
-
-    return () => {
-      clearInterval(ivl);
-    };
-  }, []);
+  });
 }

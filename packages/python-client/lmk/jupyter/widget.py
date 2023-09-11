@@ -31,6 +31,7 @@ from lmk.instance import (
     ChannelsState,
     Channels,
 )
+from lmk.jupyter.colab import colab_support_enabled, sync_widget_state_for_colab
 from lmk.jupyter.constants import MODULE_NAME, MODULE_VERSION
 from lmk.jupyter.history import (
     IPythonHistory,
@@ -866,6 +867,9 @@ class LMKWidgetThread(threading.Thread):
             unobserve_instance = self._observe_instance(loop)
             unobserve_jupyter = self._observe_jupyter(loop)
             unobserve_notebook = self._observe_notebook()
+            unobserve_colab = None
+            if colab_support_enabled():
+                unobserve_colab = sync_widget_state_for_colab(self.widget)
 
             tasks = []
             tasks.append(loop.create_task(self.history.main_loop()))
@@ -881,6 +885,8 @@ class LMKWidgetThread(threading.Thread):
                 for task in reversed(tasks):
                     with contextlib.suppress(asyncio.CancelledError):
                         task.cancel()
+                if unobserve_colab is not None:
+                    unobserve_colab()
                 unobserve_notebook()
                 unobserve_jupyter()
                 unobserve_instance()

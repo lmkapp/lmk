@@ -45,10 +45,17 @@ export default function Auth() {
   return (
     <div className="lmk-flex lmk-items-center lmk-content-center lmk-h-full lmk-grow lmk-flex-col">
       {!initiated ? (
-        <div className="lmk-flex lmk-m-2 lmk-flex-col lmk-items-center lmk-gap-4">
-          Log in to LMK
+        <div className="lmk-flex lmk-m-2 lmk-flex-col lmk-items-center lmk-gap-4 lmk-max-w-[400px]">
+          <span>
+            <b>In order to use LMK you must log in.</b>
+          </span>
+          <span>
+            If this is your first time using LMK, click the link below to
+            create an account in order to use LMK. Sign up takes less than
+            a minute, and no payment information is required.
+          </span>
           <Button onClick={() => setInitiated(true)}>
-            Log in
+            Log in / Sign up
           </Button>
         </div>
       ) : !authUrl ? (

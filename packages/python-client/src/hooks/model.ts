@@ -1,4 +1,3 @@
-import * as Backbone from "backbone";
 import {
   createContext,
   useContext,
@@ -10,10 +9,7 @@ import {
 import * as uuid from "uuid";
 import { WidgetModel } from "@jupyter-widgets/base";
 
-type ModelCallback = (
-  models: WidgetModel,
-  event: Backbone.EventHandler
-) => void;
+type ModelCallback = (models: WidgetModel, event: any) => void;
 
 export interface ModelProviderProps {
   model: WidgetModel;
@@ -50,9 +46,11 @@ export function createModelContext<T>(): ModelContext<T> {
 
     const dependencies = deps === undefined ? [model] : [...deps, model];
     useEffect(() => {
-      const callbackWrapper = (event: any) => model && callback(model, event);
+      const callbackWrapper = (event: any) => {
+        model && callback(model, event);
+      };
       model?.on(event, callbackWrapper);
-      return () => void model?.unbind(event, callbackWrapper);
+      return () => void model?.off(event, callbackWrapper);
     }, dependencies);
   };
 

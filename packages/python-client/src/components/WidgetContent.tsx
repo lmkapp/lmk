@@ -82,6 +82,7 @@ function Monitoring() {
           type="radio"
           id="lmk-monitoring-stop"
           checked={monitoringState === 'stop'}
+          readOnly
           onClick={clickHandler('stop')}
         />
         <label htmlFor="lmk-monitoring-stop">
@@ -91,6 +92,7 @@ function Monitoring() {
           type="radio"
           id="lmk-monitoring-error"
           checked={monitoringState === 'error'}
+          readOnly
           onClick={clickHandler('error')}
         />
         <label htmlFor="lmk-monitoring-error">
