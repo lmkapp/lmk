@@ -1,3 +1,3 @@
 MODULE_NAME = "@lmkapp/jupyter-widget"
 
-MODULE_VERSION = "1.0.3-dev16"
+MODULE_VERSION = "1.0.3-dev17"
