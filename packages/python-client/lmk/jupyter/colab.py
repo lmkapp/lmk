@@ -86,6 +86,7 @@ def sync_widget_state_for_colab(widget: DOMWidget) -> Callable[[], None]:
 
     def handle_update(info):
         with background_ctx(LOGGER, "colab.sync_widget_state_for_colab"):
+            LOGGER.debug("Sending colab-update message")
             widget.comm.send({"method": "custom", "content": {"type": "colab-update"}})
 
     widget.observe(handle_update)
