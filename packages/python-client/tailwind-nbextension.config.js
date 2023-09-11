@@ -10,7 +10,7 @@ module.exports = {
       success: 'var(--jp-success-color0, #1b5e20)',
       error: 'var(--jp-error-color0, #b71c1c)',
       warn: 'var(--jp-warn-color0, #e65100)',
-      cellBg: 'var(--code-cell-background, var(--jp-layout-color1, #f8f8f8))',
+      cellBg: 'var(--colab-secondary-surface-color, var(--jp-layout-color1, #f8f8f8))',
       bgLight: 'var(--colab-highlighted-surface-color, var(--jp-layout-color2, #eeeeee))',
       transparent: 'transparent',
     },

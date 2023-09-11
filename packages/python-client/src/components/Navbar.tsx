@@ -82,7 +82,7 @@ export default function Navbar() {
   };
 
   return (
-    <div className="lmk-h-[24px] lmk-grid lmk-grid-cols-[max-content_1fr_auto_1fr_max-content] [&h3]:lmk-m-0 lmk-items-center">
+    <div className="lmk-h-[24px] lmk-grid lmk-grid-cols-[max-content_1fr_auto_1fr_max-content] [&h3]:lmk-m-0 lmk-items-center lmk-text-font">
       <h3 className="lmk-font-bold lmk-text-lg">LMK</h3>
       <Channels className="lmk-hidden lg:lmk-flex lmk-col-start-3" />
       <div className="lmk-col-start-5" ref={ref}>
@@ -96,7 +96,7 @@ export default function Navbar() {
           >
             <FontAwesomeIcon
               icon={faBars}
-              className="lmk-cursor-pointer lmk-text-lg lmk-w-5 lmk-h-5 lmk-text-font"
+              className="lmk-cursor-pointer lmk-text-lg lmk-w-5 lmk-h-5"
             />
           </button>
         </div>
