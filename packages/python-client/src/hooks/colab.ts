@@ -5,10 +5,10 @@ export function useColabSupport(): void {
     // console.log("Handling custom event", event, typeof google);
     if (event?.type === "colab-update" && typeof google !== "undefined") {
       // console.log(Date.now(), "Invoking sync function");
-      // await google.colab.kernel.invokeFunction("lmk.widget.sync", []);
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      // console.log(Date.now(), "Re-invoking sync function");
       await google.colab.kernel.invokeFunction("lmk.widget.sync", []);
+      // await new Promise((resolve) => setTimeout(resolve, 500));
+      // console.log(Date.now(), "Re-invoking sync function");
+      // await google.colab.kernel.invokeFunction("lmk.widget.sync", []);
     }
   });
 }
