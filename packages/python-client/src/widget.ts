@@ -7,6 +7,8 @@ import { WidgetViewProvider } from "./lib/widget-model";
 
 export class LMKView extends DOMWidgetView {
   render() {
+    console.log("initializing lmk widget");
+
     const component = createElement(WidgetViewProvider, {
       model: this.model,
       children: createElement(Widget),
