@@ -82,7 +82,8 @@ async def cli(ctx: click.Context, log_level: str, base_path: str):
     )
 )
 @click.option(
-    "--force/--no-force",
+    "-f",
+    "--force",
     is_flag=True,
     default=False,
     help=(
@@ -90,9 +91,16 @@ async def cli(ctx: click.Context, log_level: str, base_path: str):
         "force the CLI to re-authenticate with LMK."
     ),
 )
-def login(force):
+@click.option(
+    "-m",
+    "--manual",
+    is_flag=True,
+    default=False,
+    help="Print the authentication URL instead of attempting to open the page in a web browser.",
+)
+def login(force, manual):
     instance = get_instance()
-    instance.login(force=force)
+    instance.login(force=force, auth_mode="manual" if manual else None)
 
 
 attach_option = click.option(
