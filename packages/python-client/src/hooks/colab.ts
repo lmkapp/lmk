@@ -1,36 +1,64 @@
-import { useWidgetModelEvent } from "../lib/widget-model";
+import { useEffect } from "react";
+import { useWidgetModelState } from "../lib/widget-model";
 
-export function useColabSupport(): void {
-  useWidgetModelEvent("msg:custom", async (_, event) => {
-    // console.log("Handling custom event", event, typeof google);
-    if (event?.type === "colab-update" && typeof google !== "undefined") {
-      console.log('Invoking sync function');
-      try {
-        await google.colab.kernel.invokeFunction("lmk.widget.sync", []);
-      } catch (error) {
-        console.error('ERROR1', error);
-      }
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-      console.log('Invoking sync function again');
-      try {
-        await google.colab.kernel.invokeFunction("lmk.widget.sync", []);
-      } catch (error) {
-        console.error('ERROR2', error);
-      }
-      console.log('Invoked twice');
-      // setDirty((val) => val + 1);
-    }
-  });
+export interface UseColabSupportArgs {
+  setRequiresReload: (requiresReload: boolean) => void;
+}
 
-  // useEffect(() => {
-  //   if (typeof google === 'undefined') {
-  //     return;
+export function useColabSupport({
+  setRequiresReload,
+}: UseColabSupportArgs): void {
+  const [notebookName, setNotebookName] = useWidgetModelState("notebook_name");
+
+  useEffect(() => {
+    const ivl = setInterval(() => {
+      if (document.visibilityState === "hidden") {
+        return;
+      }
+      const element = document.querySelector(
+        "#doc-name"
+      ) as HTMLInputElement | null;
+      if (element === null) {
+        return;
+      }
+      if (notebookName === element.value) {
+        return;
+      }
+      setNotebookName(element.value);
+    }, 2000);
+
+    return () => {
+      clearInterval(ivl);
+    };
+  }, [notebookName]);
+
+  // This would be the ideal way to trigger syncing (well, other than just
+  // not having to it at all of course), but unfortunately it doesn't work
+  // correctly. Falling back to using an interval (below) :(
+  // useWidgetModelEvent("msg:custom", async (_, event) => {
+  //   if (event?.type === "colab-update" && typeof google !== "undefined") {
+  //     await google.colab.kernel.invokeFunction("lmk.widget.sync", []);
   //   }
+  // });
 
-  //   const ivl = setInterval(() => {
-  //     google.colab.kernel.invokeFunction("lmk.widget.sync", []);
-  //   }, 2000);
+  useEffect(() => {
+    if (typeof google === "undefined") {
+      return;
+    }
 
-  //   return () => { clearInterval(ivl) };
-  // }, []);
+    const ivl = setInterval(async () => {
+      if (document.visibilityState === "hidden") {
+        return;
+      }
+      try {
+        await google.colab.kernel.invokeFunction("lmk.widget.sync", []);
+      } catch (error: any) {
+        console.error("Invoke function error", error, error?.toString());
+      }
+    }, 2000);
+
+    return () => {
+      clearInterval(ivl);
+    };
+  }, []);
 }
