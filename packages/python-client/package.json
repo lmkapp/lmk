@@ -1,6 +1,6 @@
 {
   "name": "@lmkapp/jupyter-widget",
-  "version": "1.0.3-dev23",
+  "version": "1.0.3-dev24",
   "description": "Jupyter Widget for using LMK in a jupyter notebook",
   "keywords": [
     "jupyter",
