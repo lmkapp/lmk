@@ -10,13 +10,14 @@ export function useColabSupport(): void {
       } catch (error) {
         console.error('ERROR1', error);
       }
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      await new Promise((resolve) => setTimeout(resolve, 2000));
       console.log('Invoking sync function again');
       try {
         await google.colab.kernel.invokeFunction("lmk.widget.sync", []);
       } catch (error) {
         console.error('ERROR2', error);
       }
+      console.log('Invoked twice');
       // setDirty((val) => val + 1);
     }
   });
