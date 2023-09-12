@@ -7,18 +7,23 @@ import Layout from './Layout';
 import WidgetContent from './WidgetContent';
 
 import '../../styles/tailwind.css';
+import ReloadRequired, { ReloadRequiredContext } from './ReloadRequired';
 
 export default function Widget() {
-  const [requiresReload, setRequiresReload] = useState(false);
+  const [requiresReload, setRequiresReload] = useState<ReloadRequiredContext>();
   const [widgetState] = useWidgetModelState('auth_state');
 
-  useColabSupport({ setRequiresReload });
+  useColabSupport({
+    setRequiresReload: (reload) => {
+      setRequiresReload(reload ? 'colab' : undefined)
+    }
+  });
   useKeepUrlUpdated();
 
   return (
     <Layout>
-      {requiresReload ? (
-        <p>Reload required</p> 
+      {requiresReload !== undefined ? (
+        <ReloadRequired context={requiresReload} />
       ) : widgetState === 'authenticated' ? (
         <WidgetContent /> 
       ) : (

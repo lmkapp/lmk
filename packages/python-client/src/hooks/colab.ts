@@ -11,6 +11,10 @@ export function useColabSupport({
   const [notebookName, setNotebookName] = useWidgetModelState("notebook_name");
 
   useEffect(() => {
+    if (typeof google === 'undefined') {
+      return;
+    }
+
     const ivl = setInterval(() => {
       if (document.visibilityState === "hidden") {
         return;
@@ -18,6 +22,7 @@ export function useColabSupport({
       const element = document.querySelector(
         "#doc-name"
       ) as HTMLInputElement | null;
+      console.log('ELEMENT', element);
       if (element === null) {
         return;
       }
@@ -52,8 +57,11 @@ export function useColabSupport({
       }
       try {
         await google.colab.kernel.invokeFunction("lmk.widget.sync", []);
+        setRequiresReload(false);
       } catch (error: any) {
-        console.error("Invoke function error", error, error?.toString());
+        if (error?.toString()?.includes('code cell must be re-executed to allow runtime access')) {
+          setRequiresReload(true);
+        }
       }
     }, 2000);
 
