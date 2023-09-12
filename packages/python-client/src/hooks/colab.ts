@@ -7,7 +7,11 @@ export function useColabSupport(): void {
       // await google.colab.kernel.invokeFunction("lmk.widget.sync", []);
       await new Promise((resolve) => setTimeout(resolve, 500));
       console.log('Invoking sync function');
-      await google.colab.kernel.invokeFunction("lmk.widget.sync", []);
+      try {
+        await google.colab.kernel.invokeFunction("lmk.widget.sync", []);
+      } catch (error) {
+        console.error('ERROR', error);
+      }
       // setDirty((val) => val + 1);
     }
   });
