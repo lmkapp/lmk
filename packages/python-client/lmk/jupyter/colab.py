@@ -1,10 +1,16 @@
+import asyncio
 import os
 import logging
 import warnings
-from typing import Callable
 
-from ipywidgets import DOMWidget
+from blinker import signal
+
+from lmk.jupyter.notebook_info import find_server_and_session
 from lmk.jupyter.utils import background_ctx
+from lmk.utils.blinker import wait_for_signal
+
+
+colab_support_enabled_changed = signal("colab-support-enabled-changed")
 
 
 LOGGER = logging.getLogger(__name__)
@@ -46,7 +52,7 @@ def enable_google_colab_support(check_if_colab: bool = True) -> None:
 
     try:
         from google.colab import output
-    except ImportError as err:
+    except ImportError:
         warnings.warn(
             "Unable to import the `google.colab.output` module, google colab support is not enabled.",
             RuntimeWarning,
@@ -65,6 +71,7 @@ def enable_google_colab_support(check_if_colab: bool = True) -> None:
     output.enable_custom_widget_manager()
 
     COLAB_SUPPORT_ENABLED = True
+    colab_support_enabled_changed.send(None, old_value=False, new_value=True)
 
 
 def disable_google_colab_support() -> None:
@@ -79,19 +86,39 @@ def disable_google_colab_support() -> None:
     output.disable_custom_widget_manager()
 
     COLAB_SUPPORT_ENABLED = False
+    colab_support_enabled_changed.send(None, old_value=True, new_value=False)
 
 
-def sync_widget_state_for_colab(widget: DOMWidget) -> Callable[[], None]:
+async def observe_google_colab_url(widget: "LMKWidget") -> None:
     """ """
 
-    def handle_update(info):
-        with background_ctx(LOGGER, "colab.sync_widget_state_for_colab"):
-            LOGGER.debug("Sending colab-update message")
-            widget.comm.send({"method": "custom", "content": {"type": "colab-update"}})
+    def get_url(file_id):
+        return f"https://colab.research.google.com/drive/{file_id}"
 
-    widget.observe(handle_update)
+    loop = asyncio.get_running_loop()
 
-    def teardown():
-        widget.unobserve(handle_update)
+    file_id = None
+    while True:
+        if not colab_support_enabled():
+            await wait_for_signal(colab_support_enabled_changed)
+            continue
 
-    return teardown
+        try:
+            _, session = await loop.run_in_executor(None, find_server_and_session)
+        except Exception:
+            LOGGER.exception("Error getting session")
+        else:
+            if session is None:
+                LOGGER.error("Unable to get session")
+            else:
+                new_file_id = session["path"].split("=", 1)[1]
+                if new_file_id and new_file_id != file_id:
+                    file_id = new_file_id
+                    url = get_url(file_id)
+                    if url != widget.url:
+                        widget.url = url
+        finally:
+            await asyncio.sleep(60)
+
+
+from lmk.jupyter.widget import LMKWidget

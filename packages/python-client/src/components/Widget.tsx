@@ -1,62 +1,35 @@
-import { useEffect } from 'react';
+import { useState } from 'react';
 import { useColabSupport } from '../hooks/colab';
+import { useKeepUrlUpdated } from '../hooks/url';
 import { useWidgetModelState } from '../lib/widget-model';
 import Auth from './Auth';
 import Layout from './Layout';
 import WidgetContent from './WidgetContent';
 
 import '../../styles/tailwind.css';
-
-// Slight hack for jupyterlab--for some reason it's easy to get into
-// a state where I have a notebook open but the URL is just `/lab`,
-// which won't lead me to the actual notebook if I click the link.
-// This function basically checks if the URL is changing to something
-// that is almost the same as the old URL except has only a portion
-// of the path name, and skips the update if so.
-function shouldUpdateUrl(oldUrl: string | null, newUrl: string): boolean {
-  if (oldUrl === null) {
-    return true;
-  }
-  if (oldUrl === newUrl) {
-    return false;
-  }
-
-  const oldUrlObj = new URL(oldUrl);
-  const newUrlObj = new URL(newUrl);
-  if (
-    oldUrlObj.host === newUrlObj.host &&
-    oldUrlObj.protocol === newUrlObj.protocol &&
-    oldUrlObj.pathname !== newUrlObj.pathname &&
-    oldUrlObj.pathname.startsWith(newUrlObj.pathname)
-  ) {
-    return false;
-  }
-  return true;
-}
+import ReloadRequired, { ReloadRequiredContext } from './ReloadRequired';
 
 export default function Widget() {
+  const [requiresReload, setRequiresReload] = useState<ReloadRequiredContext>();
   const [widgetState] = useWidgetModelState('auth_state');
-  const [url, setUrl] = useWidgetModelState('url');
-  const windowUndefined = typeof window === 'undefined';
+  let watchUrl = true;
 
-  useColabSupport();
+  watchUrl &&= useColabSupport({
+    requiresReload: requiresReload === 'colab',
+    setRequiresReload: () => setRequiresReload('colab')
+  });
 
-  useEffect(() => {
-    const ivl = setInterval(() => {
-      if (windowUndefined) {
-        return;
-      }
-      if (shouldUpdateUrl(url, window.location.href)) {
-        setUrl(window.location.href);
-      }
-    }, 1000);
-
-    return () => clearInterval(ivl);
-  }, [url, windowUndefined]);
+  useKeepUrlUpdated(watchUrl);
 
   return (
     <Layout>
-      {widgetState === 'authenticated' ? <WidgetContent /> : <Auth />}
+      {requiresReload !== undefined ? (
+        <ReloadRequired context={requiresReload} />
+      ) : widgetState === 'authenticated' ? (
+        <WidgetContent /> 
+      ) : (
+        <Auth />
+      )}
     </Layout>
   );
 }

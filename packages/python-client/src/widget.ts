@@ -14,4 +14,8 @@ export class LMKView extends DOMWidgetView {
 
     ReactDOM.render(component, this.el);
   }
+
+  remove() {
+    ReactDOM.unmountComponentAtNode(this.el);
+  }
 }

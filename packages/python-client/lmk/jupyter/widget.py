@@ -31,7 +31,7 @@ from lmk.instance import (
     ChannelsState,
     Channels,
 )
-from lmk.jupyter.colab import colab_support_enabled, sync_widget_state_for_colab
+from lmk.jupyter.colab import observe_google_colab_url, colab_support_enabled
 from lmk.jupyter.constants import MODULE_NAME, MODULE_VERSION
 from lmk.jupyter.history import (
     IPythonHistory,
@@ -46,6 +46,7 @@ from lmk.jupyter.notebook_info import (
 )
 from lmk.jupyter.utils import background_ctx
 from lmk.utils.asyncio import loop_ctx, asyncio_event, asyncio_lock, asyncio_queue
+from lmk.utils.blinker import wait_for_signal
 from lmk.utils.logging import setup_logging
 from lmk.utils.ws import WebSocket
 
@@ -657,8 +658,22 @@ class LMKWidgetThread(threading.Thread):
     async def _observe_auth(self) -> None:
         while True:
             instance = get_instance()
-            api = AppApi(instance.client)
-            access_token = await instance._get_access_token_async()
+
+            if not instance.access_token:
+                await asyncio.wait(
+                    [
+                        wait_for_signal(access_token_changed, instance),
+                        wait_for_signal(default_instance_changed),
+                    ],
+                    return_when=asyncio.FIRST_COMPLETED,
+                )
+                continue
+
+            try:
+                access_token = await instance._get_access_token_async()
+            except exc.NotLoggedIn:
+                access_token = None
+
             if access_token:
                 try:
                     await api.get_current_app(  # type: ignore
@@ -678,7 +693,7 @@ class LMKWidgetThread(threading.Thread):
                 )
                 instance.logout()
 
-            await asyncio.sleep(10)
+            await asyncio.sleep(900)
 
     @contextlib.contextmanager
     def _session_ctx(self, loop: asyncio.AbstractEventLoop):
@@ -867,14 +882,12 @@ class LMKWidgetThread(threading.Thread):
             unobserve_instance = self._observe_instance(loop)
             unobserve_jupyter = self._observe_jupyter(loop)
             unobserve_notebook = self._observe_notebook()
-            unobserve_colab = None
-            if colab_support_enabled():
-                unobserve_colab = sync_widget_state_for_colab(self.widget)
 
             tasks = []
             tasks.append(loop.create_task(self.history.main_loop()))
             tasks.append(loop.create_task(self.info_watcher.main_loop()))
             tasks.append(loop.create_task(self._observe_auth()))
+            tasks.append(loop.create_task(observe_google_colab_url(self.widget)))
 
             try:
                 LOGGER.info("Starting main loop")
@@ -885,8 +898,6 @@ class LMKWidgetThread(threading.Thread):
                 for task in reversed(tasks):
                     with contextlib.suppress(asyncio.CancelledError):
                         task.cancel()
-                if unobserve_colab is not None:
-                    unobserve_colab()
                 unobserve_notebook()
                 unobserve_jupyter()
                 unobserve_instance()
