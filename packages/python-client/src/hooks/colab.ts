@@ -20,9 +20,6 @@ export function useColabSupport({
   // possible to install a custom one, so it's possible that something is possible there (though
   // I'm not hopeful because the issue seems to be on the kernel side--)
   useEffect(() => {
-    // DEBUGGING - remove
-    setTimeout(() => setRequiresReload(), 1000);
-
     if (typeof google === "undefined" || requiresReload) {
       return;
     }
