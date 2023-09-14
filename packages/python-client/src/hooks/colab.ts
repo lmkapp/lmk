@@ -31,7 +31,7 @@ export function useColabSupport({
         return;
       }
       try {
-        await google.colab.kernel.invokeFunction("lmk.widget.sync", []);
+        await google!.colab.kernel.invokeFunction("lmk.widget.sync", []);
       } catch (error: any) {
         if (
           error

@@ -2,12 +2,16 @@ import asyncio
 import os
 import logging
 import warnings
+from typing import TYPE_CHECKING
 
 from blinker import signal
 
 from lmk.jupyter.notebook_info import find_server_and_session
 from lmk.jupyter.utils import background_ctx
 from lmk.utils.blinker import wait_for_signal
+
+if TYPE_CHECKING:
+    from lmk.jupyter.widget import LMKWidget
 
 
 colab_support_enabled_changed = signal("colab-support-enabled-changed")
@@ -119,6 +123,3 @@ async def observe_google_colab_url(widget: "LMKWidget") -> None:
                         widget.url = url
         finally:
             await asyncio.sleep(60)
-
-
-from lmk.jupyter.widget import LMKWidget

@@ -16,8 +16,6 @@ from blinker import signal
 from jupyter_core.paths import jupyter_runtime_dir
 from traitlets.config import MultipleInstanceError
 
-from lmk.jupyter.colab import colab_support_enabled
-
 
 LOGGER = logging.getLogger(__name__)
 
@@ -101,6 +99,8 @@ def notebook_name() -> str:
     """Returns the short name of the notebook w/o the .ipynb extension,
     or raises a FileNotFoundError exception if it cannot be determined.
     """
+    from lmk.jupyter.colab import colab_support_enabled
+
     _, session = find_server_and_session()
     if session is None:
         raise FileNotFoundError(FILE_ERROR.format("name"))
