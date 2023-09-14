@@ -14,10 +14,10 @@ export default function Widget() {
   const [widgetState] = useWidgetModelState('auth_state');
 
   useColabSupport({
-    setRequiresReload: (reload) => {
-      setRequiresReload(reload ? 'colab' : undefined)
-    }
+    requiresReload: requiresReload === 'colab',
+    setRequiresReload: () => setRequiresReload('colab')
   });
+
   useKeepUrlUpdated();
 
   return (

@@ -4,16 +4,19 @@
 import asyncio
 import json
 import logging
+import os
 import urllib.error
 import urllib.request
 from itertools import chain
-from pathlib import Path, PurePath
-from typing import Generator, Tuple, Union, NoReturn, Optional
+from pathlib import Path
+from typing import Generator, Tuple, Union, NoReturn, Optional, Dict, Any
 
 import ipykernel
 from blinker import signal
 from jupyter_core.paths import jupyter_runtime_dir
 from traitlets.config import MultipleInstanceError
+
+from lmk.jupyter.colab import colab_support_enabled
 
 
 LOGGER = logging.getLogger(__name__)
@@ -73,7 +76,7 @@ def _get_sessions(srv):
         raise urllib.error.HTTPError(CONN_ERROR)
 
 
-def _find_nb_path() -> Union[Tuple[dict, PurePath], Tuple[None, None]]:
+def _find_server_and_session() -> Union[Tuple[Dict[str, Any], Dict[str, Any]], Tuple[None, None]]:
     try:
         kernel_id = _get_kernel_id()
     except (MultipleInstanceError, RuntimeError):
@@ -83,7 +86,7 @@ def _find_nb_path() -> Union[Tuple[dict, PurePath], Tuple[None, None]]:
             sessions = _get_sessions(srv)
             for sess in sessions:
                 if sess["kernel"]["id"] == kernel_id:
-                    return srv, PurePath(sess["notebook"]["path"])
+                    return srv, sess
         except Exception:
             pass  # There may be stale entries in the runtime directory
     return None, None
@@ -93,21 +96,20 @@ def notebook_name() -> str:
     """Returns the short name of the notebook w/o the .ipynb extension,
     or raises a FileNotFoundError exception if it cannot be determined.
     """
-    _, path = _find_nb_path()
-    if path:
-        return path.name
-    raise FileNotFoundError(FILE_ERROR.format("name"))
+    _, session = _find_server_and_session()
+    if session is None:
+        raise FileNotFoundError(FILE_ERROR.format("name"))
 
+    if colab_support_enabled():
+        session_name = session.get("notebook", {}).get("name")
+        if session_name:
+            return session_name
 
-def notebook_path() -> Path:
-    """Returns the absolute path of the notebook,
-    or raises a FileNotFoundError exception if it cannot be determined.
-    """
-    srv, path = _find_nb_path()
-    if srv and path:
-        root_dir = Path(srv.get("root_dir") or srv["notebook_dir"])
-        return root_dir / path
-    raise FileNotFoundError(FILE_ERROR.format("path"))
+    path = session.get("notebook", {}).get("path")
+    if path is None:
+        raise FileNotFoundError(FILE_ERROR.format("name"))
+
+    return os.path.basename(path)
 
 
 class NotebookInfoWatcher:

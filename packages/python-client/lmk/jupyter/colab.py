@@ -1,9 +1,7 @@
 import os
 import logging
 import warnings
-from typing import Callable
 
-from ipywidgets import DOMWidget
 from lmk.jupyter.utils import background_ctx
 
 
@@ -46,7 +44,7 @@ def enable_google_colab_support(check_if_colab: bool = True) -> None:
 
     try:
         from google.colab import output
-    except ImportError as err:
+    except ImportError:
         warnings.warn(
             "Unable to import the `google.colab.output` module, google colab support is not enabled.",
             RuntimeWarning,
@@ -79,19 +77,3 @@ def disable_google_colab_support() -> None:
     output.disable_custom_widget_manager()
 
     COLAB_SUPPORT_ENABLED = False
-
-
-def sync_widget_state_for_colab(widget: DOMWidget) -> Callable[[], None]:
-    """ """
-
-    def handle_update(info):
-        with background_ctx(LOGGER, "colab.sync_widget_state_for_colab"):
-            LOGGER.debug("Sending colab-update message")
-            widget.comm.send({"method": "custom", "content": {"type": "colab-update"}})
-
-    widget.observe(handle_update)
-
-    def teardown():
-        widget.unobserve(handle_update)
-
-    return teardown
