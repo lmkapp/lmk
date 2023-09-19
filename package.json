@@ -8,5 +8,12 @@
   },
   "keywords": [],
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "pnpm": {
+    "overrides": {
+      "trim": "0.0.3",
+      "semver": ">=7.5.2",
+      "got": ">=11.8.5"
+    }
+  }
 }
