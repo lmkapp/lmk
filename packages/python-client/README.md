@@ -9,7 +9,7 @@
 You can install using `pip`:
 
 ```bash
-pip install lmk-python
+pip install 'lmkapp[cli,jupyter]'
 ```
 
 If you are using Jupyter Notebook 5.2 or earlier, you may also need to enable
@@ -27,8 +27,21 @@ python -m venv venv
 
 Install the python package. This will also build the TS package.
 ```bash
-pip install -e ".[dev,jupyter]"
+pip install -e ".[dev,jupyter,cli,docs,types]"
 ```
+
+## Docs Development
+
+To build the docs, run:
+```bash
+pnpm build:docs
+```
+To run a development server, run:
+```bash
+pnpm dev:docs
+```
+
+## Jupyter Development
 
 When developing your extensions, you need to manually enable your extensions with the
 notebook / lab frontend. For lab, this is done by the command:
@@ -74,15 +87,8 @@ By default it will also create a tag.
 
 ```bash
 pip install bump2version
-bump2version <patch|minor|major>
+bumpversion <pre|prekind|patch|minor|major>
 ```
-
-## Notes
-
-Juypter extension doesn't work in vscode, would need to create a vscode extension for that; see https://github.com/microsoft/vscode-jupyter#notebook-support
-- It seems like vscode's notebook support may not be implemented correctly/doesn't look for modules in the same way as jupyter, because it is working on both jupyter notebook classic and jupyter lab, and in theory it should not be a problem to find the JS for the extension. Experiment
-
-- Makes an ascii-friendly interactive version for channels more attractive
 
 ## Publishing - PyPI
 
