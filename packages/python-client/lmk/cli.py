@@ -28,6 +28,13 @@ from lmk.utils.decorators import stack_decorators
 from lmk.utils.logging import setup_logging
 
 
+# Sigh, just to make the vercel build work; sqlite3
+# docs not exist there, so the cli() setup fails. Side
+# note though--is that the wrong place to be doing that setup
+# if it runs _even on a --help command???_
+DOCS_ONLY = bool(os.getenv("LMK_CLI_DOCS_ONLY"))
+
+
 def _check_login() -> None:
     instance = get_instance()
     if instance.logged_in():
@@ -62,6 +69,9 @@ cli_args = stack_decorators(
 @cli_args
 @click.pass_context
 async def cli(ctx: click.Context, log_level: str, base_path: str):
+    if DOCS_ONLY:
+        return
+    
     setup_logging(level=log_level)
     ctx.ensure_object(dict)
     ctx.obj["log_level"] = log_level
