@@ -3,6 +3,11 @@ paths:
   /v1/app/current:
     get:
       operationId: getCurrentApp
+      summary: ''
+      description: |-
+        When called by an authorized app, this endpoint will return
+        metadata about the app. For any other caller, this endpoint
+        is forbidden
       parameters: []
       responses:
         '200':
@@ -16,6 +21,10 @@ paths:
   /v1/headlessAuth:
     post:
       operationId: createHeadlessAuthSession
+      summary: ''
+      description: |-
+        Create a headless auth session, which allows certain LMK apps
+        to retrieve oauth access tokens without any server component
       parameters: []
       requestBody:
         required: true
@@ -35,6 +44,8 @@ paths:
   /v1/headlessAuth/{sessionId}:
     get:
       operationId: getHeadlessAuthSession
+      summary: ''
+      description: Get the headless auth session with the given ID.
       parameters:
         - name: sessionId
           required: true
@@ -53,6 +64,11 @@ paths:
   /v1/headlessAuth/{sessionId}/token:
     get:
       operationId: retrieveHeadlessAuthSessionToken
+      summary: ''
+      description: |-
+        Retrieve the oauth token for the headless auth session. If the
+        session is complete, the access and refresh tokens will be
+        returned. Otherwise, this endpoint will return an error code.
       parameters:
         - name: sessionId
           required: true
@@ -71,6 +87,8 @@ paths:
   /v1/headlessAuth/refresh:
     post:
       operationId: refreshHeadlessAuthToken
+      summary: ''
+      description: Refresh an oauth access token obtained through a headless auth session
       parameters: []
       requestBody:
         required: true
@@ -87,24 +105,15 @@ paths:
                 $ref: '#/components/schemas/AccessTokenResponse'
       tags:
         - headlessAuth
-  /oauth/authorize:
-    post:
-      operationId: authorize
-      parameters: []
-      requestBody:
-        required: true
-        content:
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/AuthorizeOauthRequest'
-      responses:
-        '201':
-          description: ''
-      tags:
-        - oauth
   /oauth/token:
     post:
       operationId: token
+      summary: ''
+      description: |-
+        This is the oauth access token endpoint as defined by the oauth spec.
+        After an access code is given to an oauth app, they use that access
+        code as well as their client id and secret to get an access token
+        and refresh token from this endpoint.
       parameters:
         - name: authorization
           required: true
@@ -129,6 +138,14 @@ paths:
   /v1/notificationChannel:
     get:
       operationId: listNotificationChannels
+      summary: ''
+      description: |-
+        List the notification channels for the current user. If called by
+        an oauth app, the results will depend on what scopes have been
+        granted to the app. If `channel.read` has not been granted,
+        this will return an empty list of channels. Otherwise, it will
+        return all of the channels unless the user limited the app's
+        visibillity during the oauth flow.
       parameters: []
       responses:
         '200':
@@ -142,6 +159,11 @@ paths:
   /v1/event:
     post:
       operationId: postEvent
+      summary: ''
+      description: |-
+        Post an event to LMK. This will appear in the LMK app and
+        can optionally be used to notify the user on one of their
+        configured notification channels.
       parameters: []
       requestBody:
         required: true
@@ -161,6 +183,11 @@ paths:
   /v1/session:
     post:
       operationId: createSession
+      summary: ''
+      description: |-
+        Create an interactive session. This appears in the LMK app and allows
+        both monitoring the state of a remote process and interacting with it,
+        or configuring notifications to be send when it finishes running.
       parameters: []
       requestBody:
         required: true
@@ -180,6 +207,8 @@ paths:
   /v1/session/{sessionId}:
     get:
       operationId: getSession
+      summary: ''
+      description: Get an interactive session by ID.
       parameters:
         - name: sessionId
           required: true
@@ -197,6 +226,8 @@ paths:
         - session
     patch:
       operationId: updateSession
+      summary: ''
+      description: Update the state of an interactive session.
       parameters:
         - name: sessionId
           required: true
@@ -221,6 +252,10 @@ paths:
   /v1/session/{sessionId}/end:
     post:
       operationId: endSession
+      summary: ''
+      description: |-
+        Mark an interactive session as ended. This will not allow any further
+        updates to the session.
       parameters:
         - name: sessionId
           required: true
@@ -239,6 +274,11 @@ paths:
   /v1/session/{sessionId}/action:
     post:
       operationId: sessionAction
+      summary: ''
+      description: |-
+        Perform one of the available actions. If no client is
+        connected to the interactive session, it will return
+        a 412 error code.
       parameters:
         - name: sessionId
           required: true
@@ -262,8 +302,18 @@ info:
   version: 0.0.1
   contact: {}
 tags:
-  - name: user
-    description: Endpoints related to user management
+  - name: app
+    description: Endpoints related to oauth apps
+  - name: headlessAuth
+    description: Enpdoints related to headless authentication sessions
+  - name: oauth
+    description: Authorization and access token endpoints for oauth
+  - name: notification
+    description: Endpoints related to notification channels
+  - name: event
+    description: API for posting events
+  - name: session
+    description: Endpoints related to creating and updating interactive sessions
 servers: []
 components:
   schemas:
@@ -348,34 +398,6 @@ components:
       required:
         - appId
         - refreshToken
-    AuthorizeOauthRequest:
-      type: object
-      properties:
-        client_id:
-          type: string
-        response_type:
-          type: string
-        redirect_uri:
-          type: string
-        scope:
-          type: string
-          pattern: /[\w\-:]+( [\w\-:])*/
-        state:
-          type: string
-        notification_channels:
-          type: string
-        token:
-          type: string
-        csrf_token:
-          type: string
-      required:
-        - client_id
-        - response_type
-        - redirect_uri
-        - scope
-        - state
-        - token
-        - csrf_token
     AccessTokenRequest:
       type: object
       properties:
@@ -534,6 +556,7 @@ components:
           type: string
           enum:
             - USER
+            - ADMIN
             - APP
             - ANONYMOUS
         actorId:
