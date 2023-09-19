@@ -436,30 +436,38 @@ class LMKWidgetThread(threading.Thread):
             if self.widget.selected_channel is not None:
                 kws["notification_channels"] = [self.widget.selected_channel]
 
+            started = "<unknown>"
+            if self.widget.jupyter_cell_started_at is not None:
+                started = format_date(date_from_millis(self.widget.jupyter_cell_started_at))
+
+            ended = "<unknown>"
+            if self.widget.jupyter_cell_finished_at is not None:
+                ended = format_date(date_from_millis(self.widget.jupyter_cell_finished_at))
+
             if self.widget.jupyter_cell_state == IPythonCellStateType.Error:
                 message = (
                     f"Notebook [**{self.widget.notebook_name}**]({self.widget.url}) "
                     f"**failed** during execution **\\[{self.widget.jupyter_execution_num}\\]**:\n"
                     f"```python\n{self.widget.jupyter_cell_text}\n```\n\n"
                     f"Error:\n```\n{self.widget.jupyter_cell_error}\n```\n\n"
-                    f"Started: {format_date(date_from_millis(self.widget.jupyter_cell_started_at))}\n\n"
-                    f"Ended: {format_date(date_from_millis(self.widget.jupyter_cell_finished_at))}"
+                    f"Started: {started}\n\n"
+                    f"Ended: {ended}"
                 )
             elif self.widget.jupyter_cell_state == IPythonCellStateType.Cancelled:
                 message = (
                     f"Notebook [**{self.widget.notebook_name}**]({self.widget.url}) "
                     f"was **cancelled** during execution **\\[{self.widget.jupyter_execution_num}\\]**:\n"
                     f"```python\n{self.widget.jupyter_cell_text}\n```\n\n"
-                    f"Started: {format_date(date_from_millis(self.widget.jupyter_cell_started_at))}\n\n"
-                    f"Ended: {format_date(date_from_millis(self.widget.jupyter_cell_finished_at))}"
+                    f"Started: {started}\n\n"
+                    f"Ended: {ended}"
                 )
             else:
                 message = (
                     f"Notebook [**{self.widget.notebook_name}**]({self.widget.url}) "
                     f"**stopped** after execution **\\[{self.widget.jupyter_execution_num}\\]**:\n"
                     f"```python\n{self.widget.jupyter_cell_text}\n```\n\n"
-                    f"Started: {format_date(date_from_millis(self.widget.jupyter_cell_started_at))}\n\n"
-                    f"Ended: {format_date(date_from_millis(self.widget.jupyter_cell_finished_at))}"
+                    f"Started: {started}\n\n"
+                    f"Ended: {ended}"
                 )
 
             response = await instance.notify(message=message, async_req=True, **kws)  # type: ignore
