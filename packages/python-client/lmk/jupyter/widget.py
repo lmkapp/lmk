@@ -10,7 +10,7 @@ import threading
 import time
 import uuid
 from datetime import datetime, timedelta, timezone
-from typing import Callable, Union, Optional
+from typing import Callable, Union, Optional, cast
 
 from ipywidgets import DOMWidget
 from traitlets import Unicode, Int, List, Dict, UseEnum
@@ -190,7 +190,7 @@ class LMKWidget(DOMWidget):
         min_execution = self.jupyter_execution_num
         if not immediate:
             min_time += 2000
-            min_execution += 1
+            min_execution = (min_execution or 0) + 1
 
         self.notify_min_execution = min_execution
         self.notify_min_time = min_time
@@ -198,7 +198,7 @@ class LMKWidget(DOMWidget):
     def set_log_level(self, level: Union[int, str]) -> None:
         if isinstance(level, int):
             level = logging.getLevelName(level)
-        self.log_level = level
+        self.log_level = cast(str, level)
 
     def shutdown(self) -> None:
         self.thread.shutdown()
