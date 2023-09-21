@@ -4,6 +4,7 @@ import logging
 import warnings
 from typing import TYPE_CHECKING
 
+import aiohttp
 from blinker import signal
 
 from lmk.jupyter.notebook_info import find_server_and_session
@@ -107,19 +108,20 @@ async def observe_google_colab_url(widget: "LMKWidget") -> None:
             await wait_for_signal(colab_support_enabled_changed)
             continue
 
-        try:
-            _, session = await loop.run_in_executor(None, find_server_and_session)
-        except Exception:
-            LOGGER.exception("Error getting session")
-        else:
-            if session is None:
-                LOGGER.error("Unable to get session")
+        async with aiohttp.ClientSession() as client_session:
+            try:
+                _, session = await find_server_and_session(client_session)
+            except Exception:
+                LOGGER.exception("Error getting session")
             else:
-                new_file_id = session["path"].split("=", 1)[1]
-                if new_file_id and new_file_id != file_id:
-                    file_id = new_file_id
-                    url = get_url(file_id)
-                    if url != widget.url:
-                        widget.url = url
-        finally:
-            await asyncio.sleep(60)
+                if session is None:
+                    LOGGER.error("Unable to get session")
+                else:
+                    new_file_id = session["path"].split("=", 1)[1]
+                    if new_file_id and new_file_id != file_id:
+                        file_id = new_file_id
+                        url = get_url(file_id)
+                        if url != widget.url:
+                            widget.url = url
+            finally:
+                await asyncio.sleep(60)
