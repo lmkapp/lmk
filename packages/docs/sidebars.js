@@ -30,7 +30,8 @@ const sidebars = {
       type: 'link',
       label: 'HTTP API Reference',
       href: '/api'
-    }
+    },
+    'support'
   ],
 
   // But you can create a sidebar manually
