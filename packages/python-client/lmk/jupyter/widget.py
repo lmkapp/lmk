@@ -438,11 +438,15 @@ class LMKWidgetThread(threading.Thread):
 
             started = "<unknown>"
             if self.widget.jupyter_cell_started_at is not None:
-                started = format_date(date_from_millis(self.widget.jupyter_cell_started_at))
+                started = format_date(
+                    date_from_millis(self.widget.jupyter_cell_started_at)
+                )
 
             ended = "<unknown>"
             if self.widget.jupyter_cell_finished_at is not None:
-                ended = format_date(date_from_millis(self.widget.jupyter_cell_finished_at))
+                ended = format_date(
+                    date_from_millis(self.widget.jupyter_cell_finished_at)
+                )
 
             if self.widget.jupyter_cell_state == IPythonCellStateType.Error:
                 message = (
@@ -715,6 +719,8 @@ class LMKWidgetThread(threading.Thread):
 
         queue = asyncio_queue(loop=loop)
 
+        unknown_notebook_name = "<unknown>.ipynb"
+
         def date_or_null(value):
             if not value:
                 return None
@@ -744,7 +750,7 @@ class LMKWidgetThread(threading.Thread):
 
                 message = {
                     "url": self.widget.url,
-                    "notebookName": self.widget.notebook_name,
+                    "notebookName": self.widget.notebook_name or unknown_notebook_name,
                     "shellState": self.widget.jupyter_state.value,
                     "cellState": self.widget.jupyter_cell_state.value,
                     "cellText": self.widget.jupyter_cell_text,
@@ -809,8 +815,6 @@ class LMKWidgetThread(threading.Thread):
                 with background_ctx(LOGGER, type(self).__name__):
                     if self.widget.auth_state != AuthState.Authenticated:
                         return
-                    if self.widget.notebook_name is None:
-                        return
 
                     async with lock:
                         LOGGER.debug("Acquired lock")
@@ -823,7 +827,8 @@ class LMKWidgetThread(threading.Thread):
                             state=JupyterSessionState(
                                 type="jupyter",
                                 url=self.widget.url,
-                                notebookName=self.widget.notebook_name,
+                                notebookName=self.widget.notebook_name
+                                or unknown_notebook_name,
                                 shellState=self.widget.jupyter_state.value,
                                 cellError=self.widget.jupyter_cell_error,
                                 executionNum=self.widget.jupyter_execution_num,

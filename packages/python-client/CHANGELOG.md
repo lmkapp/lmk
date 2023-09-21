@@ -5,23 +5,43 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [1.0.4] - 2023-09-20
+
+### Fixed
+
+- Fix issue w/ some notebook environments where getting the notebook name does not work w/ the token in the query string.
+
+- Fix issue where an interactive session does not get created if we can't find the notebook name.
+
+## [1.0.3] - 2023-09-18
+
+### Added
 
 - Add type checking with `mypy`
+
+- Add google colab support
+
+### Fixed
 
 - Fix more compatiblility issues w/ older Python versions.
 
 ## [0.1.2] - 2023-09-02
 
+### Fixed
+
 - Fix config file usage; everything was being overwritten on instantiation of the `Instance`.
 
 ## [0.1.1] - 2023-09-02
+
+### Fixed
 
 - Fix bug w/ API url, where it could be set to `None` which would cause issues
 
 - Compatibility--previously this package would only work w/ Python 3.11; now it works with python 3.7+
 
 ## [0.1.0] - 2023-07-29
+
+### Added
 
 - Creating initial version of CLI to monitor running scripts.
 
@@ -39,17 +59,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.0.7] - 2023-04-19
 
+### Fixed
+
 - Update plugin version spec to use a tilde because caret isn't working for some reason
 
 ## [0.0.6] - 2023-04-19
+
+### Fixed
 
 - Fix jupyter extension asset paths in `pyproject.toml`
 
 ## [0.0.5] - 2023-04-19
 
+### Fixed
+
 - Add missing `typing_extensions` and `urllib3` dependencies
 
 ## [0.0.4] - 2023-04-19
+
+### Added
 
 - Published package to pypi
 

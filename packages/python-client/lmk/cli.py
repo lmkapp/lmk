@@ -71,7 +71,7 @@ cli_args = stack_decorators(
 async def cli(ctx: click.Context, log_level: str, base_path: str):
     if DOCS_ONLY:
         return
-    
+
     setup_logging(level=log_level)
     ctx.ensure_object(dict)
     ctx.obj["log_level"] = log_level
