@@ -17,7 +17,7 @@ This list is incomplete; if you would like support for a platform that you see i
 | ----------------- | --------- | --------- |
 | Jupyter Notebooks |    ✅     | Tested manually w/ last 2 major versions  of Jupyter Notebooks |
 | Jupyter Lab       |    ✅     | Tested manually w/ last 2 major versions of Jupyter Lab |
-| Google Collab     |    ✅     | Tested manually as of 9/15/2023. Colab is supported but requires a few hacks and is not quite as good of an experience as regular Jupyter Notebooks or Lab. It's worth looking at again to see if we can potentially provide better support. [Github issue](https://github.com/lmkapp/lmk/issues/1) |
+| Google Collab     |    ✅     | Tested manually as of 9/15/2023. Colab is supported but requires a few hacks and is not quite as good of an experience as regular Jupyter Notebooks or Lab. Colab notebooks with a local runtime do not work at all; this is likely true of all runtimes that aren't hosted colab runtimes. It's worth looking at again to see if we can potentially provide better support. If you are using LMK with Google Colab, please comment or add a thumbs up to the [Github issue](https://github.com/lmkapp/lmk/issues/1) to indicate you'd like better support. |
 | VSCode (via [jupyter](https://marketplace.visualstudio.com/items?itemName=ms-toolsai.jupyter) plugin) |  ✅  | Tested manually as of 9/15/2023 |
 | Kaggle            |    ❓     |           |
 | AWS Sagemaker     |    ❓     |           |
