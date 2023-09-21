@@ -1,0 +1,13 @@
+diff --git a/lib/server/configValidation.js b/lib/server/configValidation.js
+index cd9a8eb5ede2519841d3fecdf37e46a15a73d05c..cb55a62b676d6f9e93a9b2ec341f8ecf8803cf66 100644
+--- a/lib/server/configValidation.js
++++ b/lib/server/configValidation.js
+@@ -173,7 +173,7 @@ exports.ConfigSchema = utils_validation_1.Joi.object({
+         .items(utils_validation_1.Joi.object({
+         tagName: utils_validation_1.Joi.string().required(),
+         attributes: utils_validation_1.Joi.object()
+-            .pattern(/[\w-]+/, utils_validation_1.Joi.string())
++            .pattern(/[\w-]+/, [utils_validation_1.Joi.string(), utils_validation_1.Joi.boolean()])
+             .required(),
+     }).unknown())
+         .messages({

@@ -4,6 +4,8 @@
 const lightCodeTheme = require('prism-react-renderer/themes/github');
 const darkCodeTheme = require('prism-react-renderer/themes/dracula');
 
+const gtag = process.env.GOOGLE_ANALYTICS_MEASUREMENT_ID;
+
 /** @type {import('@docusaurus/types').Config} */
 const config = {
   title: 'LMK',
@@ -26,6 +28,27 @@ const config = {
     defaultLocale: 'en',
     locales: ['en'],
   },
+  
+  headTags: gtag ? [
+    {
+      tagName: 'script',
+      attributes: {
+        async: true,
+        src: `https://www.googletagmanager.com/gtag/js?id=${gtag}`
+      }
+    },
+    {
+      tagName: 'script',
+      attributes: {},
+      innerHTML: `
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+      
+        gtag('config', '${gtag}');
+      `
+    }
+  ] : [],
 
   presets: [
     [

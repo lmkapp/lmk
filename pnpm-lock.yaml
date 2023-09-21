@@ -6,6 +6,11 @@ overrides:
   got: '>=11.8.5'
   word-wrap: '>=1.2.4'
 
+patchedDependencies:
+  '@docusaurus/core@2.4.1':
+    hash: mg3qpqwqnfqozcw23knkfyon7m
+    path: patches/@docusaurus__core@2.4.1.patch
+
 importers:
 
   .: {}
@@ -17,7 +22,7 @@ importers:
         version: 1.1.0(@docusaurus/core@2.4.1)(search-insights@2.7.0)
       '@docusaurus/core':
         specifier: 2.4.1
-        version: 2.4.1(@docusaurus/types@2.4.1)(@types/node@16.18.23)(react-dom@17.0.2)(react@17.0.2)(ts-node@10.9.1)(typescript@4.7.4)
+        version: 2.4.1(patch_hash=mg3qpqwqnfqozcw23knkfyon7m)(@docusaurus/types@2.4.1)(@types/node@16.18.23)(react-dom@17.0.2)(react@17.0.2)(ts-node@10.9.1)(typescript@4.7.4)
       '@docusaurus/preset-classic':
         specifier: 2.4.1
         version: 2.4.1(@algolia/client-search@4.19.1)(@types/node@16.18.23)(react-dom@17.0.2)(react@17.0.2)(search-insights@2.7.0)(ts-node@10.9.1)(typescript@4.7.4)
@@ -1946,7 +1951,7 @@ packages:
       '@algolia/autocomplete-js': 1.11.0(@algolia/client-search@4.19.1)(algoliasearch@4.19.1)(search-insights@2.7.0)
       '@algolia/autocomplete-theme-classic': 1.11.0
       '@algolia/client-search': 4.19.1
-      '@docusaurus/core': 2.4.1(@docusaurus/types@2.4.1)(@types/node@16.18.23)(react-dom@17.0.2)(react@17.0.2)(ts-node@10.9.1)(typescript@4.7.4)
+      '@docusaurus/core': 2.4.1(patch_hash=mg3qpqwqnfqozcw23knkfyon7m)(@docusaurus/types@2.4.1)(@types/node@16.18.23)(react-dom@17.0.2)(react@17.0.2)(ts-node@10.9.1)(typescript@4.7.4)
       algoliasearch: 4.19.1
       cheerio: 1.0.0-rc.12
       clsx: 1.2.1
@@ -2323,7 +2328,7 @@ packages:
       - '@algolia/client-search'
     dev: false
 
-  /@docusaurus/core@2.4.1(@docusaurus/types@2.4.1)(@types/node@16.18.23)(react-dom@17.0.2)(react@17.0.2)(ts-node@10.9.1)(typescript@4.7.4):
+  /@docusaurus/core@2.4.1(patch_hash=mg3qpqwqnfqozcw23knkfyon7m)(@docusaurus/types@2.4.1)(@types/node@16.18.23)(react-dom@17.0.2)(react@17.0.2)(ts-node@10.9.1)(typescript@4.7.4):
     resolution: {integrity: sha512-SNsY7PshK3Ri7vtsLXVeAJGS50nJN3RgF836zkyUfAD01Fq+sAk5EwWgLw+nnm5KVNGDu7PRR2kRGDsWvqpo0g==}
     engines: {node: '>=16.14'}
     hasBin: true
@@ -2423,6 +2428,7 @@ packages:
       - utf-8-validate
       - vue-template-compiler
       - webpack-cli
+    patched: true
 
   /@docusaurus/cssnano-preset@2.4.1:
     resolution: {integrity: sha512-ka+vqXwtcW1NbXxWsh6yA1Ckii1klY9E53cJ4O9J09nkMBgrNX3iEFED1fWdv8wf4mJjvGi5RLZ2p9hJNjsLyQ==}
@@ -2503,7 +2509,7 @@ packages:
       react: ^16.8.4 || ^17.0.0
       react-dom: ^16.8.4 || ^17.0.0
     dependencies:
-      '@docusaurus/core': 2.4.1(@docusaurus/types@2.4.1)(@types/node@16.18.23)(react-dom@17.0.2)(react@17.0.2)(ts-node@10.9.1)(typescript@4.7.4)
+      '@docusaurus/core': 2.4.1(patch_hash=mg3qpqwqnfqozcw23knkfyon7m)(@docusaurus/types@2.4.1)(@types/node@16.18.23)(react-dom@17.0.2)(react@17.0.2)(ts-node@10.9.1)(typescript@4.7.4)
       '@docusaurus/logger': 2.4.1
       '@docusaurus/mdx-loader': 2.4.1(@docusaurus/types@2.4.1)(react-dom@17.0.2)(react@17.0.2)
       '@docusaurus/types': 2.4.1(react-dom@17.0.2)(react@17.0.2)
@@ -2547,7 +2553,7 @@ packages:
       react: ^16.8.4 || ^17.0.0
       react-dom: ^16.8.4 || ^17.0.0
     dependencies:
-      '@docusaurus/core': 2.4.1(@docusaurus/types@2.4.1)(@types/node@16.18.23)(react-dom@17.0.2)(react@17.0.2)(ts-node@10.9.1)(typescript@4.7.4)
+      '@docusaurus/core': 2.4.1(patch_hash=mg3qpqwqnfqozcw23knkfyon7m)(@docusaurus/types@2.4.1)(@types/node@16.18.23)(react-dom@17.0.2)(react@17.0.2)(ts-node@10.9.1)(typescript@4.7.4)
       '@docusaurus/logger': 2.4.1
       '@docusaurus/mdx-loader': 2.4.1(@docusaurus/types@2.4.1)(react-dom@17.0.2)(react@17.0.2)
       '@docusaurus/module-type-aliases': 2.4.1(react-dom@17.0.2)(react@17.0.2)
@@ -2591,7 +2597,7 @@ packages:
       react: ^16.8.4 || ^17.0.0
       react-dom: ^16.8.4 || ^17.0.0
     dependencies:
-      '@docusaurus/core': 2.4.1(@docusaurus/types@2.4.1)(@types/node@16.18.23)(react-dom@17.0.2)(react@17.0.2)(ts-node@10.9.1)(typescript@4.7.4)
+      '@docusaurus/core': 2.4.1(patch_hash=mg3qpqwqnfqozcw23knkfyon7m)(@docusaurus/types@2.4.1)(@types/node@16.18.23)(react-dom@17.0.2)(react@17.0.2)(ts-node@10.9.1)(typescript@4.7.4)
       '@docusaurus/mdx-loader': 2.4.1(@docusaurus/types@2.4.1)(react-dom@17.0.2)(react@17.0.2)
       '@docusaurus/types': 2.4.1(react-dom@17.0.2)(react@17.0.2)
       '@docusaurus/utils': 2.4.1(@docusaurus/types@2.4.1)
@@ -2627,7 +2633,7 @@ packages:
       react: ^16.8.4 || ^17.0.0
       react-dom: ^16.8.4 || ^17.0.0
     dependencies:
-      '@docusaurus/core': 2.4.1(@docusaurus/types@2.4.1)(@types/node@16.18.23)(react-dom@17.0.2)(react@17.0.2)(ts-node@10.9.1)(typescript@4.7.4)
+      '@docusaurus/core': 2.4.1(patch_hash=mg3qpqwqnfqozcw23knkfyon7m)(@docusaurus/types@2.4.1)(@types/node@16.18.23)(react-dom@17.0.2)(react@17.0.2)(ts-node@10.9.1)(typescript@4.7.4)
       '@docusaurus/types': 2.4.1(react-dom@17.0.2)(react@17.0.2)
       '@docusaurus/utils': 2.4.1(@docusaurus/types@2.4.1)
       fs-extra: 10.1.0
@@ -2664,7 +2670,7 @@ packages:
       react: ^16.8.4 || ^17.0.0
       react-dom: ^16.8.4 || ^17.0.0
     dependencies:
-      '@docusaurus/core': 2.4.1(@docusaurus/types@2.4.1)(@types/node@16.18.23)(react-dom@17.0.2)(react@17.0.2)(ts-node@10.9.1)(typescript@4.7.4)
+      '@docusaurus/core': 2.4.1(patch_hash=mg3qpqwqnfqozcw23knkfyon7m)(@docusaurus/types@2.4.1)(@types/node@16.18.23)(react-dom@17.0.2)(react@17.0.2)(ts-node@10.9.1)(typescript@4.7.4)
       '@docusaurus/types': 2.4.1(react-dom@17.0.2)(react@17.0.2)
       '@docusaurus/utils-validation': 2.4.1(@docusaurus/types@2.4.1)
       react: 17.0.2
@@ -2697,7 +2703,7 @@ packages:
       react: ^16.8.4 || ^17.0.0
       react-dom: ^16.8.4 || ^17.0.0
     dependencies:
-      '@docusaurus/core': 2.4.1(@docusaurus/types@2.4.1)(@types/node@16.18.23)(react-dom@17.0.2)(react@17.0.2)(ts-node@10.9.1)(typescript@4.7.4)
+      '@docusaurus/core': 2.4.1(patch_hash=mg3qpqwqnfqozcw23knkfyon7m)(@docusaurus/types@2.4.1)(@types/node@16.18.23)(react-dom@17.0.2)(react@17.0.2)(ts-node@10.9.1)(typescript@4.7.4)
       '@docusaurus/types': 2.4.1(react-dom@17.0.2)(react@17.0.2)
       '@docusaurus/utils-validation': 2.4.1(@docusaurus/types@2.4.1)
       react: 17.0.2
@@ -2730,7 +2736,7 @@ packages:
       react: ^16.8.4 || ^17.0.0
       react-dom: ^16.8.4 || ^17.0.0
     dependencies:
-      '@docusaurus/core': 2.4.1(@docusaurus/types@2.4.1)(@types/node@16.18.23)(react-dom@17.0.2)(react@17.0.2)(ts-node@10.9.1)(typescript@4.7.4)
+      '@docusaurus/core': 2.4.1(patch_hash=mg3qpqwqnfqozcw23knkfyon7m)(@docusaurus/types@2.4.1)(@types/node@16.18.23)(react-dom@17.0.2)(react@17.0.2)(ts-node@10.9.1)(typescript@4.7.4)
       '@docusaurus/types': 2.4.1(react-dom@17.0.2)(react@17.0.2)
       '@docusaurus/utils-validation': 2.4.1(@docusaurus/types@2.4.1)
       react: 17.0.2
@@ -2763,7 +2769,7 @@ packages:
       react: ^16.8.4 || ^17.0.0
       react-dom: ^16.8.4 || ^17.0.0
     dependencies:
-      '@docusaurus/core': 2.4.1(@docusaurus/types@2.4.1)(@types/node@16.18.23)(react-dom@17.0.2)(react@17.0.2)(ts-node@10.9.1)(typescript@4.7.4)
+      '@docusaurus/core': 2.4.1(patch_hash=mg3qpqwqnfqozcw23knkfyon7m)(@docusaurus/types@2.4.1)(@types/node@16.18.23)(react-dom@17.0.2)(react@17.0.2)(ts-node@10.9.1)(typescript@4.7.4)
       '@docusaurus/logger': 2.4.1
       '@docusaurus/types': 2.4.1(react-dom@17.0.2)(react@17.0.2)
       '@docusaurus/utils': 2.4.1(@docusaurus/types@2.4.1)
@@ -2801,7 +2807,7 @@ packages:
       react: ^16.8.4 || ^17.0.0
       react-dom: ^16.8.4 || ^17.0.0
     dependencies:
-      '@docusaurus/core': 2.4.1(@docusaurus/types@2.4.1)(@types/node@16.18.23)(react-dom@17.0.2)(react@17.0.2)(ts-node@10.9.1)(typescript@4.7.4)
+      '@docusaurus/core': 2.4.1(patch_hash=mg3qpqwqnfqozcw23knkfyon7m)(@docusaurus/types@2.4.1)(@types/node@16.18.23)(react-dom@17.0.2)(react@17.0.2)(ts-node@10.9.1)(typescript@4.7.4)
       '@docusaurus/plugin-content-blog': 2.4.1(@types/node@16.18.23)(react-dom@17.0.2)(react@17.0.2)(ts-node@10.9.1)(typescript@4.7.4)
       '@docusaurus/plugin-content-docs': 2.4.1(@types/node@16.18.23)(react-dom@17.0.2)(react@17.0.2)(ts-node@10.9.1)(typescript@4.7.4)
       '@docusaurus/plugin-content-pages': 2.4.1(@types/node@16.18.23)(react-dom@17.0.2)(react@17.0.2)(ts-node@10.9.1)(typescript@4.7.4)
@@ -2856,7 +2862,7 @@ packages:
       react: ^16.8.4 || ^17.0.0
       react-dom: ^16.8.4 || ^17.0.0
     dependencies:
-      '@docusaurus/core': 2.4.1(@docusaurus/types@2.4.1)(@types/node@16.18.23)(react-dom@17.0.2)(react@17.0.2)(ts-node@10.9.1)(typescript@4.7.4)
+      '@docusaurus/core': 2.4.1(patch_hash=mg3qpqwqnfqozcw23knkfyon7m)(@docusaurus/types@2.4.1)(@types/node@16.18.23)(react-dom@17.0.2)(react@17.0.2)(ts-node@10.9.1)(typescript@4.7.4)
       '@docusaurus/mdx-loader': 2.4.1(@docusaurus/types@2.4.1)(react-dom@17.0.2)(react@17.0.2)
       '@docusaurus/module-type-aliases': 2.4.1(react-dom@17.0.2)(react@17.0.2)
       '@docusaurus/plugin-content-blog': 2.4.1(@types/node@16.18.23)(react-dom@17.0.2)(react@17.0.2)(ts-node@10.9.1)(typescript@4.7.4)
@@ -2956,7 +2962,7 @@ packages:
       react-dom: ^16.8.4 || ^17.0.0
     dependencies:
       '@docsearch/react': 3.5.2(@algolia/client-search@4.19.1)(react-dom@17.0.2)(react@17.0.2)(search-insights@2.7.0)
-      '@docusaurus/core': 2.4.1(@docusaurus/types@2.4.1)(@types/node@16.18.23)(react-dom@17.0.2)(react@17.0.2)(ts-node@10.9.1)(typescript@4.7.4)
+      '@docusaurus/core': 2.4.1(patch_hash=mg3qpqwqnfqozcw23knkfyon7m)(@docusaurus/types@2.4.1)(@types/node@16.18.23)(react-dom@17.0.2)(react@17.0.2)(ts-node@10.9.1)(typescript@4.7.4)
       '@docusaurus/logger': 2.4.1
       '@docusaurus/plugin-content-docs': 2.4.1(@types/node@16.18.23)(react-dom@17.0.2)(react@17.0.2)(ts-node@10.9.1)(typescript@4.7.4)
       '@docusaurus/theme-common': 2.4.1(@docusaurus/types@2.4.1)(@types/node@16.18.23)(react-dom@17.0.2)(react@17.0.2)(ts-node@10.9.1)(typescript@4.7.4)
@@ -6183,7 +6189,7 @@ packages:
       '@docusaurus/core': ^2.0.0-beta || ^3.0.0-alpha
       sass: ^1.30.0
     dependencies:
-      '@docusaurus/core': 2.4.1(@docusaurus/types@2.4.1)(@types/node@16.18.23)(react-dom@17.0.2)(react@17.0.2)(ts-node@10.9.1)(typescript@4.7.4)
+      '@docusaurus/core': 2.4.1(patch_hash=mg3qpqwqnfqozcw23knkfyon7m)(@docusaurus/types@2.4.1)(@types/node@16.18.23)(react-dom@17.0.2)(react@17.0.2)(ts-node@10.9.1)(typescript@4.7.4)
       sass: 1.60.0
       sass-loader: 10.4.1(sass@1.60.0)(webpack@5.79.0)
     transitivePeerDependencies:
