@@ -100,8 +100,6 @@ async def observe_google_colab_url(widget: "LMKWidget") -> None:
     def get_url(file_id):
         return f"https://colab.research.google.com/drive/{file_id}"
 
-    loop = asyncio.get_running_loop()
-
     file_id = None
     while True:
         if not colab_support_enabled():
