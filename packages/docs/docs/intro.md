@@ -1,7 +1,7 @@
 
 # Introduction
 
-LMK is a set of tools intended to help you monitor your long-running processes within Jupyter Notebooks and command-line scripts. You'll finally be able to free yourself of the urge to check back on your jobs frequently. Similarly, you can avoid disappointment when you fail to check back only to find that it ended up failing early in the run!
+LMK is a set of tools intended to help you monitor your long-running processes within Jupyter Notebooks and command-line scripts. You'll finally be able to free yourself of the urge to check back on your jobs frequently. Similarly, you can avoid disappointment when you fail to check back only to find that it ended up failing early in the run! If you'd like to read more about the motivation behind creating LMK, check out the [introductory blog post here](https://www.camfeenstra.com/posts/introducing-lmk).
 
 When you monitor a long-running job with LMK, you can remotely see the status of the job and choose at any time to send yourself a notification if it stops or fails with an error.
 
