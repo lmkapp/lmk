@@ -15,6 +15,7 @@
   --muted: 210 40% 96.1%;
   --ifm-heading-color: hsl(var(--foreground));
   --ifm-background-color: hsl(var(--background));
+  --ifm-hero-background-color: hsl(var(--background));
   --ifm-navbar-background-color: hsl(var(--muted));
   --ifm-navbar-link-hover-color: hsl(var(--foreground));
   --ifm-menu-color-active: hsl(var(--foreground));
@@ -37,6 +38,14 @@
   --foreground: 213 31% 91%;
   --background: 224 71% 4%;
   --muted: 223 47% 11%;
+  --ifm-heading-color: hsl(var(--foreground));
+  --ifm-background-color: hsl(var(--background));
+  --ifm-hero-background-color: hsl(var(--background));
+  --ifm-navbar-background-color: hsl(var(--muted));
+  --ifm-navbar-link-hover-color: hsl(var(--foreground));
+  --ifm-menu-color-active: hsl(var(--foreground));
+  --ifm-menu-color-background-active: hsl(var(--muted));
+  --ifm-breadcrumb-color-active: hsl(var(--foreground));
   --ifm-color-primary: hsl(223 47% 50%);
   --ifm-color-primary-light: hsl(199 100% 45%);
   --ifm-color-primary-lighter: hsl(199 100% 35%);

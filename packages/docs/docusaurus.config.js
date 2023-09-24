@@ -129,6 +129,11 @@ const config = {
             position: 'right'
           },
           {
+            href: 'https://www.lmkapp.dev',
+            label: 'Website',
+            position: 'right',
+          },
+          {
             href: 'https://app.lmkapp.dev',
             label: 'App',
             position: 'right',

@@ -30,7 +30,7 @@ That's it! You should see something like this in your notebook:
 
 ![Jupyter Widget Screenshot - Not Authenticated](/img/screenshot-3.png)
 
-Click the button on the widget to log in (or run [`lmk.login()`](/docs/python/api#login)), or sign up if you don't have an existing LMK account. You'll need an account to use LMK, but you'll only have to pay if you want to send yourself notifications after your 30 day trial.
+Click the button on the widget to log in (or run [`lmk.login()`](/docs/python/api#login)), or sign up if you don't have an existing LMK account. You'll need an account to use LMK, but you'll only have to pay if you want to send yourself notifications after your 30 day trial. **No payment information is required for sign up, all you need is an email address.**
 
 After you've authenticated, the widget should look like this:
 
