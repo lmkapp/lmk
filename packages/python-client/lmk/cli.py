@@ -81,10 +81,9 @@ async def cli(ctx: click.Context, log_level: str, base_path: str):
 
     ctx.obj["manager"] = manager
 
-    config_path = None
     if base_path is not None:
         config_path = os.path.join(base_path, "config")
-    set_instance(Instance(config_path=config_path))
+        set_instance(Instance(config_path=config_path))
 
 
 @cli.command(
