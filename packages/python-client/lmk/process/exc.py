@@ -7,15 +7,14 @@ from lmk.process.models import Job
 
 
 class InvalidLogLevel(LMKError, click.ClickException):
-    """
-    """
+    """ """
 
     exit_code = 2
 
     def __init__(self, log_level: str) -> None:
         self.log_level = log_level
         super().__init__(f"Invalid log level: {log_level}")
-    
+
     def show(self, file: Optional[IO] = None) -> None:
         click.secho(str(self), fg="red", file=file)
 

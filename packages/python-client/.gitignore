@@ -16,3 +16,4 @@ __pycache__
 .ipynb_checkpoints
 _build
 .tox
+.mypy_cache

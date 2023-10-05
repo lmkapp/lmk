@@ -73,11 +73,11 @@ async def cli(ctx: click.Context, log_level: str, base_path: str):
     if DOCS_ONLY:
         return
 
-    log_level = get_log_level(log_level)
+    num_log_level = get_log_level(log_level)
 
-    setup_logging(level=log_level)
+    setup_logging(level=num_log_level)
     ctx.ensure_object(dict)
-    ctx.obj["log_level"] = log_level
+    ctx.obj["log_level"] = num_log_level
 
     manager = JobManager(base_path)
     await manager.setup()
@@ -533,33 +533,35 @@ async def check_existing_script_monitoring() -> None:
         await check_lldb()
     except exc.LLDBNotFound:
         click.secho(
-            "\n".join([
-                click.style(
-                    "No supported debugger found, your system is not "
-                    "supported. See the docs for details on setting up "
-                    "your system: ",
-                    fg="red"
-                ),
-                click.style(
-                    "https://docs.lmkapp.dev/docs/cli/running-process",
-                    bold=True
-                )
-            ])
+            "\n".join(
+                [
+                    click.style(
+                        "No supported debugger found, your system is not "
+                        "supported. See the docs for details on setting up "
+                        "your system: ",
+                        fg="red",
+                    ),
+                    click.style(
+                        "https://docs.lmkapp.dev/docs/cli/running-process", bold=True
+                    ),
+                ]
+            )
         )
         sys.exit(1)
     except exc.LLDBCannotAttach:
         click.secho(
-            "\n".join([
-                click.style(
-                    "Unable to attach to a process with lldb, your system is not "
-                    "supported. See the docs for details on setting up "
-                    "your system: ",
-                    fg="red"
-                ),
-                click.style(
-                    "https://docs.lmkapp.dev/docs/cli/running-process",
-                    bold=True
-                )
-            ])
+            "\n".join(
+                [
+                    click.style(
+                        "Unable to attach to a process with lldb, your system is not "
+                        "supported. See the docs for details on setting up "
+                        "your system: ",
+                        fg="red",
+                    ),
+                    click.style(
+                        "https://docs.lmkapp.dev/docs/cli/running-process", bold=True
+                    ),
+                ]
+            )
         )
         sys.exit(1)

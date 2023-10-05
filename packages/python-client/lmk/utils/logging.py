@@ -1,5 +1,5 @@
 from logging.config import dictConfig
-from typing import Optional, IO, Dict, Any
+from typing import Optional, IO, Dict, Any, Union
 
 
 LOG_FORMAT = "%(asctime)s [%(name)s - %(levelname)s] %(message)s"
@@ -7,7 +7,7 @@ LOG_FORMAT = "%(asctime)s [%(name)s - %(levelname)s] %(message)s"
 
 def setup_logging(
     disable_existing: bool = True,
-    level: str = "INFO",
+    level: Union[str, int] = "INFO",
     format: str = LOG_FORMAT,
     log_file: Optional[str] = None,
     log_stream: Optional[IO[str]] = None,
