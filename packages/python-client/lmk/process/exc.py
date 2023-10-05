@@ -6,6 +6,20 @@ from lmk.exc import LMKError
 from lmk.process.models import Job
 
 
+class InvalidLogLevel(LMKError, click.ClickException):
+    """
+    """
+
+    exit_code = 2
+
+    def __init__(self, log_level: str) -> None:
+        self.log_level = log_level
+        super().__init__(f"Invalid log level: {log_level}")
+    
+    def show(self, file: Optional[IO] = None) -> None:
+        click.secho(str(self), fg="red", file=file)
+
+
 class JobError(LMKError):
     """
     Base class for errors originating from monitoring command-line jobs
@@ -81,7 +95,7 @@ class LLDBCannotAttach(JobError, click.ClickException):
     def __init__(self) -> None:
         super().__init__(
             "`lldb` is not allowed to attach to processes, which means "
-            "you can't monitor alreay-running processes. Try monitoring "
+            "you can't monitor already-running processes. Try monitoring "
             "your command with the `lmk run` command if possible, or see "
             "https://docs.lmkapp.dev/docs/cli/running-process for information "
             "on how to allow `lldb` to attach to processes."

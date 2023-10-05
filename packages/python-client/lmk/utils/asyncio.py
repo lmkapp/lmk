@@ -85,7 +85,7 @@ async def shutdown_process(
             pass
 
     process.kill()
-    return await wait
+    return await process.wait()
 
 
 def asyncio_create_task(

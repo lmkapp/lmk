@@ -61,3 +61,9 @@ The following common options can be passed with any of the other commands:
 ```
 @shell python -m lmk shell-plugin --help | sed 's/python -m lmk/lmk/' | grep -v "\-\-help"
 ```
+
+### `check-existing-script-monitoring`
+
+```
+@shell python -m lmk check-existing-script-monitoring --help | sed 's/python -m lmk/lmk/' | grep -v "\-\-help"
+```

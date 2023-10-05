@@ -75,6 +75,7 @@ artifacts = [
     "lmk/generated",
     "lmk/jupyter/nbextension",
     "lmk/jupyter/labextension",
+    "lmk/shell_cli.sh"
 ]
 
 [tool.hatch.build.targets.wheel.shared-data]

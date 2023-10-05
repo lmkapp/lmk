@@ -92,11 +92,35 @@ class ProcessMonitorController:
         ws = web.WebSocketResponse()
         await ws.prepare(request)
 
-        attached_set = self.attached_event.is_set()
-        if not attached_set:
-            await self.attached_event.wait()
+        try:
+            attached_set = self.attached_event.is_set()
+            if not attached_set:
+                await self.attached_event.wait()
 
+                job = await self.manager.get_job(self.job_name)
+                if job is None:
+                    raise exc.JobNotFound(self.job_name)
+
+                if job.error is not None:
+                    await ws.send_json(
+                        {
+                            "ok": False,
+                            "stage": "attach",
+                            "error_type": job.error_type,
+                            "error": job.error,
+                        }
+                    )
+                    await ws.close()
+                    return ws
+
+            if wait_for == "attach":
+                await ws.send_json({"ok": True, "stage": "attach"})
+                await ws.close()
+                return ws
+
+            await self.done_event.wait()
             job = await self.manager.get_job(self.job_name)
+
             if job is None:
                 raise exc.JobNotFound(self.job_name)
 
@@ -104,7 +128,7 @@ class ProcessMonitorController:
                 await ws.send_json(
                     {
                         "ok": False,
-                        "stage": "attach",
+                        "stage": "run",
                         "error_type": job.error_type,
                         "error": job.error,
                     }
@@ -112,32 +136,12 @@ class ProcessMonitorController:
                 await ws.close()
                 return ws
 
-        if wait_for == "attach":
-            await ws.send_json({"ok": True, "stage": "attach"})
+            await ws.send_json({"ok": True, "stage": "run", "exit_code": job.exit_code})
             await ws.close()
             return ws
-
-        await self.done_event.wait()
-        job = await self.manager.get_job(self.job_name)
-
-        if job is None:
-            raise exc.JobNotFound(self.job_name)
-
-        if job.error is not None:
-            await ws.send_json(
-                {
-                    "ok": False,
-                    "stage": "run",
-                    "error_type": job.error_type,
-                    "error": job.error,
-                }
-            )
-            await ws.close()
+        except ConnectionResetError:
+            LOGGER.info("Web socket closed unexpectedly. wait_for: %s", wait_for)
             return ws
-
-        await ws.send_json({"ok": True, "stage": "run", "exit_code": job.exit_code})
-        await ws.close()
-        return ws
 
     @route_handler
     async def _handle_update(self, request: web.Request) -> web.Response:

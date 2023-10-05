@@ -13,6 +13,7 @@ from lmk.process.attach import attach_interactive
 from lmk.process.child_monitor import ChildMonitor
 from lmk.process.client import send_signal, update_job
 from lmk.process.lldb_monitor import LLDBProcessMonitor, check_lldb
+from lmk.process.logging import get_log_level
 from lmk.process.manager import JobManager
 from lmk.process.run import run_foreground, run_daemon
 from lmk.process.shell_plugin import (
@@ -71,6 +72,8 @@ cli_args = stack_decorators(
 async def cli(ctx: click.Context, log_level: str, base_path: str):
     if DOCS_ONLY:
         return
+
+    log_level = get_log_level(log_level)
 
     setup_logging(level=log_level)
     ctx.ensure_object(dict)
@@ -514,3 +517,49 @@ def shell_plugin(
     if uninstall:
         uninstall_script(profile_file)
         click.secho("Shell plugin uninstalled successfully", fg="green", bold=True)
+
+
+@async_command(
+    cli,
+    short_help="Check if you can monitor already-running scripts on your system",
+    help=(
+        "Check if monitoring a process after it's already started is "
+        "supported on your computer. See the docs for details: "
+        "https://docs.lmkapp.dev/docs/cli/running-process."
+    ),
+)
+async def check_existing_script_monitoring() -> None:
+    try:
+        await check_lldb()
+    except exc.LLDBNotFound:
+        click.secho(
+            "\n".join([
+                click.style(
+                    "No supported debugger found, your system is not "
+                    "supported. See the docs for details on setting up "
+                    "your system: ",
+                    fg="red"
+                ),
+                click.style(
+                    "https://docs.lmkapp.dev/docs/cli/running-process",
+                    bold=True
+                )
+            ])
+        )
+        sys.exit(1)
+    except exc.LLDBCannotAttach:
+        click.secho(
+            "\n".join([
+                click.style(
+                    "Unable to attach to a process with lldb, your system is not "
+                    "supported. See the docs for details on setting up "
+                    "your system: ",
+                    fg="red"
+                ),
+                click.style(
+                    "https://docs.lmkapp.dev/docs/cli/running-process",
+                    bold=True
+                )
+            ])
+        )
+        sys.exit(1)
