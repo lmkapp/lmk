@@ -576,11 +576,13 @@ components:
           oneOf:
             - $ref: '#/components/schemas/EmailChannelPayload'
             - $ref: '#/components/schemas/TextMessageChannelPayload'
+            - $ref: '#/components/schemas/WebPushChannelPayload'
           discriminator:
             propertyName: type
             mapping:
               email: '#/components/schemas/EmailChannelPayload'
               text-message: '#/components/schemas/TextMessageChannelPayload'
+              web-push: '#/components/schemas/WebPushChannelPayload'
         notificationChannelId:
           type: string
         name:
@@ -637,6 +639,7 @@ components:
           enum:
             - email
             - text-message
+            - web-push
         name:
           type: string
         status:
@@ -802,3 +805,24 @@ components:
       required:
         - type
         - phoneNumber
+    WebPushChannelPayload:
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+            - web-push
+        endpoint:
+          type: string
+        device:
+          type: string
+        p256dhKey:
+          type: string
+        authKey:
+          type: string
+      required:
+        - type
+        - endpoint
+        - device
+        - p256dhKey
+        - authKey
