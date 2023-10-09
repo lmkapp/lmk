@@ -25,23 +25,23 @@ TEST_JUPYTER_DIR = os.path.dirname(__file__)
 NOTEBOOK_NAME = "launch_widget.ipynb"
 
 
-# For debugging purposes
-def print_page(driver: webdriver.Chrome, path: str) -> None:
-    with open(path, "wb+") as f:
-        opts = PrintOptions()
-        # opts.page_width = 40
-        # opts.page_height = 60
-        page_base64 = driver.print_page(opts)
-        raw = base64.b64decode(page_base64)
-        f.write(raw)
+# # For debugging purposes
+# def print_page(driver: webdriver.Chrome, path: str) -> None:
+#     with open(path, "wb+") as f:
+#         opts = PrintOptions()
+#         # opts.page_width = 40
+#         # opts.page_height = 60
+#         page_base64 = driver.print_page(opts)
+#         raw = base64.b64decode(page_base64)
+#         f.write(raw)
 
 
-@pytest.fixture
-def take_final_screenshot(browser: webdriver.Chrome):
-    try:
-        yield
-    finally:
-        print_page(browser, "final.pdf")
+# @pytest.fixture
+# def take_final_screenshot(browser: webdriver.Chrome):
+#     try:
+#         yield
+#     finally:
+#         print_page(browser, "final.pdf")
 
 
 @pytest.fixture(scope="session")
@@ -179,9 +179,7 @@ def test_jupyter_widget_notebook(
     )
 
 
-def test_jupyter_widget_lab(
-    browser: webdriver.Chrome, lab_server: str, take_final_screenshot
-) -> None:
+def test_jupyter_widget_lab(browser: webdriver.Chrome, lab_server: str) -> None:
     browser.set_window_size(1000, 800)
     browser.get(f"{lab_server}/lab/tree/{NOTEBOOK_NAME}")
 
@@ -199,8 +197,6 @@ def test_jupyter_widget_lab(
         EC.visibility_of_element_located((By.XPATH, spinner_xpath)),
         "Spinner found for too long",
     )
-
-    print_page(browser, "before.pdf")
 
     webdriver.ActionChains(browser).key_down(Keys.SHIFT).send_keys(
         Keys.ENTER, Keys.ENTER

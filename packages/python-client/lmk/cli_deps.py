@@ -1,7 +1,12 @@
 import sys
 
+from lmk.constants import DOCS_ONLY
+
 
 def check_cli_deps() -> None:
+    if DOCS_ONLY:
+        return
+
     try:
         import aiosqlite
         import click

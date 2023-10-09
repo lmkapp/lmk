@@ -11,6 +11,7 @@ import sys
 import textwrap
 from typing import List, Optional, Dict, Any
 
+from lmk.constants import DOCS_ONLY
 from lmk.instance import get_instance, set_instance, Instance
 from lmk.process import exc
 from lmk.process.attach import attach_interactive
@@ -31,13 +32,6 @@ from lmk.process.shell_plugin import (
 from lmk.utils.click import async_command, async_group
 from lmk.utils.decorators import stack_decorators
 from lmk.utils.logging import setup_logging
-
-
-# Sigh, just to make the vercel build work; sqlite3
-# docs not exist there, so the cli() setup fails. Side
-# note though--is that the wrong place to be doing that setup
-# if it runs _even on a --help command???_
-DOCS_ONLY = bool(os.getenv("LMK_CLI_DOCS_ONLY"))
 
 
 def _check_login(prompt: bool = True) -> None:
