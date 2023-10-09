@@ -11,6 +11,7 @@ import time
 import webbrowser
 from datetime import datetime, timedelta
 from typing import (
+    Callable,
     Optional,
     List,
     Any,
@@ -757,6 +758,7 @@ class Instance:
         poll_interval: float = 1.0,
         auth_mode: Optional[str] = None,
         force: bool = False,
+        print_function: Optional[Callable[[str], None]] = None,
     ) -> None:
         """
         Authenticate LMK interactively. If possible, this will open
@@ -780,12 +782,18 @@ class Instance:
         return immediately. By passing ``force=True``, you may force the client to replace
         the current authentication information and log in again.
         :type force: bool, optional
+        :param print_function: Pass a print function to use when printing the "Log in successful"
+        message after successful login. By default this will use the built-in `print` function.
+        :type print_function: Callable[[str], None], optional
 
         :return: This method does not return anything
         :rtype: None
         """
+        if print_function is None:
+            print_function = print
+
         if self.logged_in() and not force:
-            print("Already authenticated, pass force=True to re-authenticate")
+            print_function("Already authenticated, pass force=True to re-authenticate")
             return
 
         session = self.initiate_auth(scope)
@@ -809,8 +817,8 @@ class Instance:
         elif auth_mode == "browser":
             webbrowser.open(session.authorize_url)
         elif auth_mode == "manual":
-            print(
-                f"Authenticate in a web browser by navigating to {session.authorize_url}"
+            print_function(
+                f"Log in in a web browser by navigating to {session.authorize_url}"
             )
         else:
             raise RuntimeError(
@@ -832,7 +840,7 @@ class Instance:
                 )
                 break
 
-        print("Authentication successful")
+        print_function("Logged in successfully")
 
     def list_notification_channels(
         self, async_req: bool = False

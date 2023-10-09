@@ -1,9 +1,13 @@
+from lmk.cli_deps import check_cli_deps
+
+check_cli_deps()
+
 import asyncio
-import psutil
 import sys
 from typing import List, Any, Dict
 
 import click
+import psutil
 
 from lmk.cli import cli
 from lmk.process.manager import JobManager

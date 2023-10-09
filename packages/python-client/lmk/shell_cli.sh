@@ -4,10 +4,11 @@ lmk() {
 
     declare -a lines
 
-    CMDS="$(SHELL_JOBS=$(jobs -l) python -m lmk.shell_cli $@)"
+    CMDS="$(SHELL_JOBS=$(jobs -l) python -m lmk.shell_cli $@ 2>&1)"
     EXIT_CODE=$?
 
     if [[ $EXIT_CODE != 0 ]]; then
+        echo $CMDS 1>&2
         return $EXIT_CODE
     fi
 

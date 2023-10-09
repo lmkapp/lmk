@@ -59,8 +59,10 @@ function Channels({ className }: ChannelsProps) {
               >
                 {channel.name} (
                 {channel.payload.type === 'email'
-                  ? channel.payload.emailAddress
-                  : channel.payload.phoneNumber}
+                  ? `(${channel.payload.emailAddress})`
+                  : channel.payload.type === 'text-message'
+                  ? `(${channel.payload.phoneNumber})`
+                  : ''}
                 )
               </option>
             ))}

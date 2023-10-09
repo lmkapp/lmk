@@ -67,3 +67,9 @@ The following common options can be passed with any of the other commands:
 ```
 @shell python -m lmk check-existing-script-monitoring --help | sed 's/python -m lmk/lmk/' | grep -v "\-\-help"
 ```
+
+### `logout`
+
+```
+@shell python -m lmk logout --help | sed 's/python -m lmk/lmk/' | grep -v "\-\-help"
+```

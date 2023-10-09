@@ -52,7 +52,6 @@ jupyter = [
 dev = [
     "black==23.*",
     "bump2version==1.*",
-    "jupyterlab==3.*",
     "tox>=4.0",
 ]
 types = [
@@ -60,7 +59,14 @@ types = [
     "types-psutil",
     "types-python-dateutil"
 ]
-test = ["pytest~=7.4.0"]
+test = [
+    "pytest~=7.4.0",
+    "selenium>=4,<5",
+    "pytest-asyncio~=0.21.1",
+    "webdriver-manager~=4.0.1",
+    "jupyterlab",
+    "notebook"
+]
 publish = ["build>=1.0.0", "twine"]
 docs = ["novella~=0.2.6", "pydoc-markdown[novella]~=4.8.2"]
 
@@ -107,6 +113,9 @@ npm = "pnpm"
 allow-direct-references = true
 
 [tool.mypy]
-packages = ["lmk"]
+packages = ["lmk", "tests"]
 exclude = ["generated"]
 ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"

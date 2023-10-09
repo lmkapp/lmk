@@ -6,6 +6,7 @@ import logging
 import io
 import os
 import signal
+import sys
 import threading
 import time
 import uuid
@@ -885,27 +886,29 @@ class LMKWidgetThread(threading.Thread):
             await asyncio.sleep(0.1)
 
     def run(self) -> None:
+        if sys.version_info < (3, 10):
+            asyncio.set_event_loop(self.loop)
+
         with contextlib.ExitStack() as stack:
             stack.enter_context(background_ctx(LOGGER, type(self).__name__))
             stack.enter_context(loop_ctx(self.loop))
             stack.enter_context(self._session_ctx(self.loop))
 
-            loop = self.loop
-            unobserve_widget = self._observe_widget(loop)
-            unobserve_instance = self._observe_instance(loop)
-            unobserve_jupyter = self._observe_jupyter(loop)
+            unobserve_widget = self._observe_widget(self.loop)
+            unobserve_instance = self._observe_instance(self.loop)
+            unobserve_jupyter = self._observe_jupyter(self.loop)
             unobserve_notebook = self._observe_notebook()
 
             tasks = []
-            tasks.append(loop.create_task(self.history.main_loop()))
-            tasks.append(loop.create_task(self.info_watcher.main_loop()))
-            tasks.append(loop.create_task(self._observe_auth()))
-            tasks.append(loop.create_task(observe_google_colab_url(self.widget)))
+            tasks.append(self.loop.create_task(self.history.main_loop()))
+            tasks.append(self.loop.create_task(self.info_watcher.main_loop()))
+            tasks.append(self.loop.create_task(self._observe_auth()))
+            tasks.append(self.loop.create_task(observe_google_colab_url(self.widget)))
 
             try:
                 LOGGER.info("Starting main loop")
                 self.startup_event.set()
-                loop.run_until_complete(self.main_loop())
+                self.loop.run_until_complete(self.main_loop())
             finally:
                 LOGGER.debug("Exiting")
                 for task in reversed(tasks):
@@ -915,8 +918,8 @@ class LMKWidgetThread(threading.Thread):
                 unobserve_jupyter()
                 unobserve_instance()
                 unobserve_widget()
-                loop.run_until_complete(loop.shutdown_asyncgens())
-                loop.close()
+                self.loop.run_until_complete(self.loop.shutdown_asyncgens())
+                self.loop.close()
 
 
 DEFAULT_WIDGET = None

@@ -5,12 +5,11 @@ from typing import Optional, Tuple, List
 
 import click
 
+from lmk.constants import PACKAGE_DIR
 from lmk.process import exc
 
 
-PROJECT_DIR = os.path.dirname(__file__)
-
-SCRIPT_PATH = os.path.join(PROJECT_DIR, "shell_cli.sh")
+SCRIPT_PATH = os.path.join(PACKAGE_DIR, "shell_cli.sh")
 
 
 def get_shell_cli_script(shell: Optional[str] = None) -> str:

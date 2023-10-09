@@ -1,3 +1,7 @@
+from lmk.cli_deps import check_cli_deps
+
+check_cli_deps()
+
 import click
 import os
 import psutil
@@ -114,7 +118,25 @@ async def cli(ctx: click.Context, log_level: str, base_path: str):
 )
 def login(force, manual):
     instance = get_instance()
-    instance.login(force=force, auth_mode="manual" if manual else None)
+    instance.login(
+        force=force,
+        auth_mode="manual" if manual else None,
+        print_function=lambda x: click.secho(x, fg="green", bold=True),
+    )
+
+
+@cli.command(
+    help=(
+        "Log out of LMK. You will need to log in again to monitor jobs or use LMK "
+        "in Jupyter notebooks."
+    )
+)
+def logout():
+    _check_login()
+
+    instance = get_instance()
+    instance.logout()
+    click.secho("Logged out successfully", fg="green", bold=True)
 
 
 attach_option = click.option(
