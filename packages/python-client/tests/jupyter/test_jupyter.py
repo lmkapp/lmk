@@ -1,5 +1,4 @@
 import asyncio
-import base64
 import os
 import shutil
 import subprocess
@@ -27,6 +26,7 @@ NOTEBOOK_NAME = "launch_widget.ipynb"
 
 # # For debugging purposes
 # def print_page(driver: webdriver.Chrome, path: str) -> None:
+#     import base64
 #     with open(path, "wb+") as f:
 #         opts = PrintOptions()
 #         # opts.page_width = 40
