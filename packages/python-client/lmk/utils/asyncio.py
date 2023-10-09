@@ -264,7 +264,7 @@ def async_callback(
         def handler(*args, **kwargs):
             use_loop = loop
             if use_loop is None:
-                use_loop = asyncio.get_event_loop()
+                use_loop = get_event_loop()
 
             result = f(*args, **kwargs)
             if inspect.isawaitable(result):
@@ -282,13 +282,23 @@ def async_callback(
     return dec(func)
 
 
+def get_event_loop() -> asyncio.AbstractEventLoop:
+    """ """
+    try:
+        return asyncio.get_event_loop()
+    except RuntimeError:
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        return loop
+
+
 def asyncio_event(loop: Optional[asyncio.AbstractEventLoop] = None) -> asyncio.Event:
     """
     The `loop` parameter was removed in python 3.10
     """
     kws: Dict[str, Any] = {}
     if sys.version_info < (3, 10):
-        kws["loop"] = loop or asyncio.get_event_loop()
+        kws["loop"] = loop or get_event_loop()
     return asyncio.Event(**kws)
 
 
@@ -298,7 +308,7 @@ def asyncio_lock(loop: Optional[asyncio.AbstractEventLoop] = None) -> asyncio.Lo
     """
     kws: Dict[str, Any] = {}
     if sys.version_info < (3, 10):
-        kws["loop"] = loop or asyncio.get_event_loop()
+        kws["loop"] = loop or get_event_loop()
     return asyncio.Lock(**kws)
 
 
@@ -310,7 +320,7 @@ def asyncio_queue(
     """
     kws: Dict[str, Any] = {}
     if sys.version_info < (3, 10):
-        kws["loop"] = loop or asyncio.get_event_loop()
+        kws["loop"] = loop or get_event_loop()
     return asyncio.Queue(maxsize, **kws)
 
 
@@ -320,5 +330,5 @@ def asyncio_future(loop: Optional[asyncio.AbstractEventLoop] = None) -> asyncio.
     """
     kws: Dict[str, Any] = {}
     if sys.version_info < (3, 10):
-        kws["loop"] = loop or asyncio.get_event_loop()
+        kws["loop"] = loop or get_event_loop()
     return asyncio.Future(**kws)

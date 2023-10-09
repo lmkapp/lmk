@@ -40,10 +40,13 @@ from lmk.utils.logging import setup_logging
 DOCS_ONLY = bool(os.getenv("LMK_CLI_DOCS_ONLY"))
 
 
-def _check_login() -> None:
+def _check_login(prompt: bool = True) -> None:
     instance = get_instance()
     if instance.logged_in():
         return
+
+    if not prompt:
+        raise exc.NotLoggedIn()
 
     resp = click.confirm("You are not logged in; would you like to log in now?")
     if not resp:
@@ -132,7 +135,7 @@ def login(force, manual):
     )
 )
 def logout():
-    _check_login()
+    _check_login(prompt=False)
 
     instance = get_instance()
     instance.logout()
