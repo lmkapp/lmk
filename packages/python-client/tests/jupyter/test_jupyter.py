@@ -170,7 +170,7 @@ def test_jupyter_widget_notebook(
             "Kernel not found",
         )
 
-    webdriver.ActionChains(browser).pause(.5).click(cell).key_down(Keys.SHIFT).send_keys(
+    webdriver.ActionChains(browser).pause(3).click(cell).key_down(Keys.SHIFT).send_keys(
         Keys.ENTER, Keys.ENTER
     ).key_up(Keys.SHIFT).perform()
 
