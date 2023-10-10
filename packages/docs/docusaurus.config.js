@@ -143,45 +143,37 @@ const config = {
       footer: {
         style: 'dark',
         links: [
-          // {
-          //   title: 'Docs',
-          //   items: [
-          //     {
-          //       label: 'Intro',
-          //       to: '/docs/intro',
-          //     },
-          //   ],
-          // },
-          // {
-          //   title: 'Community',
-          //   items: [
-          //     {
-          //       label: 'Stack Overflow',
-          //       href: 'https://stackoverflow.com/questions/tagged/docusaurus',
-          //     },
-          //     {
-          //       label: 'Discord',
-          //       href: 'https://discordapp.com/invite/docusaurus',
-          //     },
-          //     {
-          //       label: 'Twitter',
-          //       href: 'https://twitter.com/docusaurus',
-          //     },
-          //   ],
-          // },
-          // {
-          //   title: 'More',
-          //   items: [
-          //     {
-          //       label: 'Home Page',
-          //       to: 'https://www.lmkapp.dev',
-          //     },
-          //     {
-          //       label: 'GitHub',
-          //       href: 'https://github.com/cfeenstra67/lmk',
-          //     },
-          //   ],
-          // },
+          {
+            title: 'Docs',
+            items: [
+              {
+                label: 'Introduction',
+                to: '/docs/intro',
+              },
+              {
+                label: 'Jupyter notebooks',
+                to: '/docs/python/jupyter'
+              },
+              {
+                label: 'Command line scripts',
+                to: '/docs/cli/process'
+              }
+            ],
+          },
+          {
+            title: 'More',
+            items: [
+              {
+                label: 'Home Page',
+                to: 'https://www.lmkapp.dev',
+              },
+              {
+                label: 'GitHub',
+                href: 'https://github.com/lmkapp/lmk',
+              },
+            ],
+          },
+          {}
         ],
         copyright: `Copyright © ${new Date().getFullYear()} LMK`,
       },
