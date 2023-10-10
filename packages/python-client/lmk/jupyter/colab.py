@@ -56,7 +56,7 @@ def enable_google_colab_support(check_if_colab: bool = True) -> None:
         return
 
     try:
-        from google.colab import output
+        from google.colab import output  # type: ignore
     except ImportError:
         warnings.warn(
             "Unable to import the `google.colab.output` module, google colab support is not enabled.",

@@ -9,7 +9,7 @@ import signal
 import sys
 from typing import List, Optional, Any
 
-import lldb
+import lldb  # type: ignore
 
 
 LOGGER = logging.getLogger("lldb_monitor_script")

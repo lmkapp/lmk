@@ -4,12 +4,11 @@ import shutil
 import subprocess
 import tempfile
 
-import notebook
+import notebook  # type: ignore
 import pytest
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.common.print_page_options import PrintOptions
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.chrome import ChromeDriverManager
@@ -27,6 +26,8 @@ NOTEBOOK_NAME = "launch_widget.ipynb"
 # # For debugging purposes
 # def print_page(driver: webdriver.Chrome, path: str) -> None:
 #     import base64
+#     from selenium.webdriver.common.print_page_options import PrintOptions
+
 #     with open(path, "wb+") as f:
 #         opts = PrintOptions()
 #         # opts.page_width = 40

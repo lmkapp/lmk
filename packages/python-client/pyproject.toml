@@ -53,7 +53,7 @@ dev = [
     "black==23.*",
     "bump2version==1.*",
     "tox>=4.0",
-    "jupyterlab==3.*",
+    "jupyterlab==4.*",
     "build>=1.0.0"
 ]
 types = [
@@ -117,7 +117,6 @@ allow-direct-references = true
 [tool.mypy]
 packages = ["lmk", "tests"]
 exclude = ["generated"]
-ignore_missing_imports = true
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"

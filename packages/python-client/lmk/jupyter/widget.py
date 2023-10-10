@@ -13,7 +13,7 @@ import uuid
 from datetime import datetime, timedelta, timezone
 from typing import Callable, Union, Optional, cast
 
-from ipywidgets import DOMWidget
+from ipywidgets import DOMWidget  # type: ignore
 from traitlets import Unicode, Int, List, Dict, UseEnum
 
 from lmk import exc
