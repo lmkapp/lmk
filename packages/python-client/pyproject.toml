@@ -115,7 +115,7 @@ npm = "pnpm"
 allow-direct-references = true
 
 [tool.mypy]
-packages = ["lmk", "tests"]
+packages = ["lmk"]
 exclude = ["generated"]
 
 [tool.pytest.ini_options]
