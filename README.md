@@ -2,18 +2,11 @@
 
 LMK is an app that's designed to help free you from the chore of watching your scripts or notebooks run. LMK will notify you when your code is finished running! To get started, visit one of the links below.
 
-<style>
-    table {
-        width: 100%;
-    }
-</style>
+- [Docs](https://docs.lmkapp.dev)
 
-<table>
-    <tr>
-        <td align="center"><a href="https://docs.lmkapp.dev">Docs</a></td>
-        <td align="center"><a href="https://www.lmkapp.dev">Website</a></td>
-    </tr>
-</table>
+- [Website](https://www.lmkapp.dev)
+
+Currently it will allow you to monitor Jupyter notebooks and command-line scripts. This is a screenshot of what it looks like in Jupyter notebooks:
 
 <p align="center">
   <img src="https://docs.lmkapp.dev/img/screenshot-1.png" alt="LMK Screenshot in Jupyter" />
@@ -21,7 +14,7 @@ LMK is an app that's designed to help free you from the chore of watching your s
 
 ## Installation
 
-LMK is distrubted as a python package, so you can install it using `pip`:
+LMK is distributed as a python package, so you can install it using `pip`:
 ```bash
 pip install 'lmkapp[jupyter,cli]'
 ```
