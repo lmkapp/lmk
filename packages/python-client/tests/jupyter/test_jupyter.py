@@ -23,26 +23,26 @@ TEST_JUPYTER_DIR = os.path.dirname(__file__)
 NOTEBOOK_NAME = "launch_widget.ipynb"
 
 
-# For debugging purposes
-def print_page(driver: webdriver.Chrome, path: str) -> None:
-    import base64
-    from selenium.webdriver.common.print_page_options import PrintOptions
+# # For debugging purposes
+# def print_page(driver: webdriver.Chrome, path: str) -> None:
+#     import base64
+#     from selenium.webdriver.common.print_page_options import PrintOptions
 
-    with open(path, "wb+") as f:
-        opts = PrintOptions()
-        # opts.page_width = 40
-        # opts.page_height = 60
-        page_base64 = driver.print_page(opts)
-        raw = base64.b64decode(page_base64)
-        f.write(raw)
+#     with open(path, "wb+") as f:
+#         opts = PrintOptions()
+#         # opts.page_width = 40
+#         # opts.page_height = 60
+#         page_base64 = driver.print_page(opts)
+#         raw = base64.b64decode(page_base64)
+#         f.write(raw)
 
 
-@pytest.fixture
-def take_final_screenshot(browser: webdriver.Chrome):
-    try:
-        yield
-    finally:
-        print_page(browser, "final.pdf")
+# @pytest.fixture
+# def take_final_screenshot(browser: webdriver.Chrome):
+#     try:
+#         yield
+#     finally:
+#         print_page(browser, "final.pdf")
 
 
 @pytest.fixture(scope="session")
@@ -148,7 +148,7 @@ def browser():
 
 
 def test_jupyter_widget_notebook(
-    browser: webdriver.Chrome, notebook_server: str, ensure_notebook_extension, take_final_screenshot
+    browser: webdriver.Chrome, notebook_server: str, ensure_notebook_extension
 ) -> None:
     browser.set_window_size(1000, 800)
     browser.get(f"{notebook_server}/notebooks/{NOTEBOOK_NAME}")
