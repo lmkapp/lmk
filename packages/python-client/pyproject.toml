@@ -52,7 +52,7 @@ jupyter = [
 dev = [
     "ruff==0.5.4",
     "bump2version==1.*",
-    "tox>=4.0",
+    "tox>=4.2",
     "jupyterlab==4.*",
     "build>=1.0.0"
 ]
