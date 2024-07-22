@@ -70,6 +70,8 @@ jobs:
           python -m venv venv
           . venv/bin/activate
           pip install -e '.[dev]'
+          pnpm build:prod
+          pnpm build:python
       - name: Run tests
         working-directory: ./packages/python-client
         env:
