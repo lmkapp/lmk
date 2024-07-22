@@ -73,6 +73,8 @@ jobs:
           pip install -e '.[dev]'
           pnpm build:prod
           pnpm build:python
+      - name: Setup upterm session
+        uses: lhotari/action-upterm@v1
       - name: Run tests
         working-directory: ./packages/python-client
         env:
