@@ -2,26 +2,26 @@ from lmk.cli_deps import check_cli_deps
 
 check_cli_deps()
 
-import click
-import os
-import psutil
-import shlex
-import signal as signal_module
-import sys
-import textwrap
-from typing import List, Optional, Dict, Any
+import click  # noqa: E402
+import os  # noqa: E402
+import psutil  # noqa: E402
+import shlex  # noqa: E402
+import signal as signal_module  # noqa: E402
+import sys  # noqa: E402
+import textwrap  # noqa: E402
+from typing import List, Optional, Dict, Any  # noqa: E402
 
-from lmk.constants import DOCS_ONLY
-from lmk.instance import get_instance, set_instance, Instance
-from lmk.process import exc
-from lmk.process.attach import attach_interactive
-from lmk.process.child_monitor import ChildMonitor
-from lmk.process.client import send_signal, update_job
-from lmk.process.lldb_monitor import LLDBProcessMonitor, check_lldb
-from lmk.process.logging import get_log_level
-from lmk.process.manager import JobManager
-from lmk.process.run import run_foreground, run_daemon
-from lmk.process.shell_plugin import (
+from lmk.constants import DOCS_ONLY  # noqa: E402
+from lmk.instance import get_instance, set_instance, Instance  # noqa: E402
+from lmk.process import exc  # noqa: E402
+from lmk.process.attach import attach_interactive  # noqa: E402
+from lmk.process.child_monitor import ChildMonitor  # noqa: E402
+from lmk.process.client import send_signal, update_job  # noqa: E402
+from lmk.process.lldb_monitor import LLDBProcessMonitor, check_lldb  # noqa: E402
+from lmk.process.logging import get_log_level  # noqa: E402
+from lmk.process.manager import JobManager  # noqa: E402
+from lmk.process.run import run_foreground, run_daemon  # noqa: E402
+from lmk.process.shell_plugin import (  # noqa: E402
     detect_shell,
     install_script,
     uninstall_script,
@@ -29,9 +29,9 @@ from lmk.process.shell_plugin import (
     resolve_pid,
     get_shell_cli_script,
 )
-from lmk.utils.click import async_command, async_group
-from lmk.utils.decorators import stack_decorators
-from lmk.utils.logging import setup_logging
+from lmk.utils.click import async_command, async_group  # noqa: E402
+from lmk.utils.decorators import stack_decorators  # noqa: E402
+from lmk.utils.logging import setup_logging  # noqa: E402
 
 
 def _check_login(prompt: bool = True) -> None:

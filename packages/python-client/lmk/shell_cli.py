@@ -2,17 +2,17 @@ from lmk.cli_deps import check_cli_deps
 
 check_cli_deps()
 
-import asyncio
-import sys
-from typing import List, Any, Dict
+import asyncio  # noqa: E402
+import sys  # noqa: E402
+from typing import List, Any, Dict  # noqa: E402
 
-import click
-import psutil
+import click  # noqa: E402
+import psutil  # noqa: E402
 
-from lmk.cli import cli
-from lmk.process.manager import JobManager
-from lmk.process.shell_plugin import resolve_pid
-from lmk.utils import shlex_join
+from lmk.cli import cli  # noqa: E402
+from lmk.process.manager import JobManager  # noqa: E402
+from lmk.process.shell_plugin import resolve_pid  # noqa: E402
+from lmk.utils import shlex_join  # noqa: E402
 
 
 def format_params(values: Dict[str, Any], params: List[click.Parameter]) -> List[str]:

@@ -34,7 +34,7 @@ def display_widget() -> None:
         from lmk.jupyter.widget import get_widget
     except ImportError as err:
         # TODO: improve
-        raise RuntimeError(f"Jupyter modules not installed") from err
+        raise RuntimeError("Jupyter modules not installed") from err
     widget = get_widget()
     display(widget)
 
@@ -43,5 +43,5 @@ def display_widget() -> None:
 def background_ctx(logger: logging.Logger, ctx: str) -> Generator[None, None, None]:
     try:
         yield
-    except Exception as err:
+    except Exception:
         logger.exception(f"Error encountered in {ctx}")

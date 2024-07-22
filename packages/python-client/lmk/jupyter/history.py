@@ -41,7 +41,7 @@ class IPythonCellState:
         if not self.result:
             return None
         if self.result.error_before_exec:
-            return self.result.error_before_exec
+            return cast(Exception, self.result.error_before_exec)
         if self.result.error_in_exec:
             return self.result.error_in_exec
         return None

@@ -1,5 +1,4 @@
 import asyncio
-import io
 import json
 import logging
 import os
@@ -131,7 +130,7 @@ class LLDBProcessMonitor(ProcessMonitor):
     ) -> MonitoredProcess:
         log_file = open(log_path, "ab+", buffering=0)
 
-        with open(output_path, "wb+") as f:
+        with open(output_path, "wb+"):
             pass
 
         process = await run_with_lldb(

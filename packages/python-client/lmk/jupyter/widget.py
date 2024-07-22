@@ -17,7 +17,6 @@ from ipywidgets import DOMWidget  # type: ignore
 from traitlets import Unicode, Int, List, Dict, UseEnum
 
 from lmk import exc
-from lmk.generated.api.app_api import AppApi
 from lmk.generated.models.jupyter_session_state import JupyterSessionState
 from lmk.generated.models.session_response import SessionResponse
 from lmk.generated.exceptions import ApiException
@@ -32,7 +31,7 @@ from lmk.instance import (
     ChannelsState,
     Channels,
 )
-from lmk.jupyter.colab import observe_google_colab_url, colab_support_enabled
+from lmk.jupyter.colab import observe_google_colab_url
 from lmk.jupyter.constants import MODULE_NAME, MODULE_VERSION
 from lmk.jupyter.history import (
     IPythonHistory,
@@ -254,7 +253,7 @@ class LMKWidgetThread(threading.Thread):
 
     async def initiate_auth(self, payload, instance: Instance):
         if self.widget.auth_state == AuthState.AuthInProgress:
-            LOGGER.info(f"Skipping auth because it is in progress")
+            LOGGER.info("Skipping auth because it is in progress")
             return
 
         LOGGER.debug("Initiating auth")
@@ -335,7 +334,7 @@ class LMKWidgetThread(threading.Thread):
             self.widget.channels_state = instance.channels.fetch_state
 
         if self.widget.channels_state == ChannelsState.Loading:
-            LOGGER.info(f"Skipping channel fetch because it is in progress")
+            LOGGER.info("Skipping channel fetch because it is in progress")
             return
 
         await instance.channels.fetch(async_req=True, force=True)  # type: ignore
@@ -689,10 +688,7 @@ class LMKWidgetThread(threading.Thread):
 
             if access_token:
                 try:
-                    await api.get_current_app(  # type: ignore
-                        async_req=True,
-                        _headers={"Authorization": f"Bearer {access_token}"},
-                    )
+                    await instance.whoami(async_req=True)  # type: ignore
                 except ApiException as err:
                     if 400 <= err.status < 500:
                         LOGGER.warn(

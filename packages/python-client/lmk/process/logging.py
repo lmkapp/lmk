@@ -1,5 +1,3 @@
-import logging
-
 from lmk.process import exc
 
 

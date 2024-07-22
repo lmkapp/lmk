@@ -262,12 +262,12 @@ async def main(argv: List[str]) -> int:
         f"expr int $fd = (int) open({json.dumps(args.output_file)}, 1089)",
     ]
     if args.message is not None:
-        commands.append(f"expr int $xd = (int) dup(1)")
+        commands.append("expr int $xd = (int) dup(1)")
 
     commands.extend(
         [
-            f"expr (void) dup2($fd, 1)",
-            f"expr (void) dup2($fd, 2)",
+            "expr (void) dup2($fd, 1)",
+            "expr (void) dup2($fd, 2)",
         ]
     )
 
@@ -275,11 +275,11 @@ async def main(argv: List[str]) -> int:
         commands.extend(
             [
                 f"expr (void) write($xd, {json.dumps(args.message)}, {len(args.message)})",
-                f"expr (void) close($xd)",
+                "expr (void) close($xd)",
             ]
         )
 
-    commands.append(f"expr (void) close($fd)")
+    commands.append("expr (void) close($fd)")
 
     run_commands(command_interpreter, commands)
     process.Continue()

@@ -159,7 +159,7 @@ def test_jupyter_widget_notebook(
         cell_xpath = '//div[contains(@class, "cell") and contains(@class, "code_cell") and .//*[contains(text(), "import")] and .//*[contains(text(), "lmk")]]'
     if notebook_version_info >= (7,):
         cell_xpath = '//div[contains(@class, "jp-CodeMirrorEditor") and .//*[contains(text(), "import")] and .//*[contains(text(), "lmk")]]'
-        kernel_xpath = '//button[contains(@class, "jp-Toolbar-kernelName") and .//*[contains(text(), "Python 3")]]'
+        kernel_xpath = '//*[(self::button or self::jp-button) and contains(@class, "jp-Toolbar-kernelName") and .//*[contains(text(), "Python 3")]]'
 
     cell = WebDriverWait(browser, 10).until(
         EC.visibility_of_element_located((By.XPATH, cell_xpath)), "Cell not found"
@@ -181,11 +181,11 @@ def test_jupyter_widget_notebook(
 
 
 def test_jupyter_widget_lab(browser: webdriver.Chrome, lab_server: str) -> None:
-    browser.set_window_size(1000, 800)
+    browser.set_window_size(1400, 800)
     browser.get(f"{lab_server}/lab/tree/{NOTEBOOK_NAME}")
 
     cell_xpath = '//div[contains(@class, "jp-CodeMirrorEditor") and .//*[contains(text(), "import")] and .//*[contains(text(), "lmk")]]'
-    kernel_xpath = '//button[contains(@class, "jp-Toolbar-kernelName") and .//*[contains(text(), "Python 3")]]'
+    kernel_xpath = '//*[(self::button or self::jp-button) and contains(@class, "jp-Toolbar-kernelName") and .//*[contains(text(), "Python 3")]]'
     spinner_xpath = '//*[@id = "jupyterlab-splash"]'
 
     WebDriverWait(browser, 10).until(

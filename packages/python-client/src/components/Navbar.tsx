@@ -57,13 +57,12 @@ function Channels({ className }: ChannelsProps) {
                 key={channel.notificationChannelId}
                 value={channel.notificationChannelId}
               >
-                {channel.name} (
+                {channel.name}
                 {channel.payload.type === 'email'
-                  ? `(${channel.payload.emailAddress})`
+                  ? ` (${channel.payload.emailAddress})`
                   : channel.payload.type === 'text-message'
-                  ? `(${channel.payload.phoneNumber})`
+                  ? ` (${channel.payload.phoneNumber})`
                   : ''}
-                )
               </option>
             ))}
           </select>

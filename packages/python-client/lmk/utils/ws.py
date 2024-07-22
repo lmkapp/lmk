@@ -242,7 +242,7 @@ class WSDisconnected(WSError):
     """ """
 
     def __init__(self) -> None:
-        super().__init__(f"Web socket disconnected uncleanly")
+        super().__init__("Web socket disconnected uncleanly")
 
 
 class WSConnectionError(WSError):
@@ -262,7 +262,8 @@ class InvalidWSMessage(WSError):
 class WSCloseError(WSError):
     """ """
 
-    def __init__(self, code: int, reason: str) -> None:
+    def __init__(self, code: int, reason: Optional[str] = None) -> None:
+        reason_str = reason or "<unknown>"
         super().__init__(
-            f"Web socket closed unexpectedly. Code: {code}, " f"reason: {reason}"
+            f"Web socket closed unexpectedly. Code: {code}, " f"reason: {reason_str}"
         )

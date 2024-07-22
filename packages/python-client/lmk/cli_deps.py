@@ -8,10 +8,10 @@ def check_cli_deps() -> None:
         return
 
     try:
-        import aiosqlite
-        import click
-        import psutil
-        import sqlalchemy
+        import aiosqlite  # noqa: F401
+        import click  # noqa: F401
+        import psutil  # noqa: F401
+        import sqlalchemy  # noqa: F401
     except ImportError:
         print(
             "Required modules for the LMK CLI were not found. Run "

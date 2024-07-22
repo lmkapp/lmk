@@ -90,7 +90,7 @@ async def _get_sessions(
 
 async def find_server_and_session(
     session: aiohttp.ClientSession,
-) -> (Union[Tuple[Dict[str, Any], Dict[str, Any]], Tuple[None, None]]):
+) -> Union[Tuple[Dict[str, Any], Dict[str, Any]], Tuple[None, None]]:
     """
     Find the server and session for the current Jupyter kernel
     """

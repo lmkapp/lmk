@@ -47,12 +47,11 @@
     "clean:generated": "rimraf lmk/generated",
     "clean:python": "rm -rf lmk/**/__pycache__ lmk/**/*.pyc",
     "clean:docs": "rm -rf ../docs/docs/python/reference.md",
-    "format": "prettier --write \"src/**/*.ts\" && venv/bin/black lmk tests",
+    "format": "prettier --write \"src/**/*.ts\" && venv/bin/ruff format lmk tests && venv/bin/ruff check --fix lmk",
     "generate": "openapi-generator-cli generate > /dev/null",
     "lint": "eslint . --ext .ts,.tsx --fix",
     "lint:check": "eslint . --ext .ts,.tsx",
     "prepack": "pnpm run build:lib",
-    "test": "jest",
     "watch": "npm-run-all -p watch:*",
     "watch:lib": "tsc -w -p tsconfig.build.json",
     "watch:nbextension": "webpack --watch --mode=development",
@@ -64,10 +63,9 @@
     "pypi-upload-test": "twine upload --repository-url https://test.pypi.org/legacy/ dist/lmkapp-*",
     "pypi-upload": "twine upload dist/lmkapp-*",
     "test:python": "venv/bin/py.test -vv tests",
-    "check:python": "venv/bin/mypy && venv/bin/black --check lmk",
+    "check:python": "venv/bin/mypy && venv/bin/ruff check lmk",
     "tox": "venv/bin/tox",
-    "npm-publish": "./publish.sh",
-    "test:blah": "echo HERE $([[ $(cat package.json | jq -r .version) = \"0\" ]] && echo abc || echo def)"
+    "npm-publish": "./publish.sh"
   },
   "dependencies": {
     "@jupyter-widgets/base": "^1.1.10 || ^2 || ^3 || ^4 || ^5 || ^6",

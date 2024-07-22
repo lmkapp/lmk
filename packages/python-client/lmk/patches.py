@@ -1,6 +1,7 @@
 """
 Patches for generated classes
 """
+
 from functools import wraps
 
 from lmk.generated.models.notification_channel_response_payload import (

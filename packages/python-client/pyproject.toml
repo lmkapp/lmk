@@ -50,7 +50,7 @@ jupyter = [
     "ipykernel"
 ]
 dev = [
-    "black==23.*",
+    "ruff==0.5.4",
     "bump2version==1.*",
     "tox>=4.0",
     "jupyterlab==4.*",
@@ -86,7 +86,10 @@ artifacts = [
     "lmk/shell_cli.sh"
 ]
 
-[tool.hatch.build.targets.wheel.force-include]
+[tool.hatch.build.targets.wheel]
+packages = ["lmk"]
+
+[tool.hatch.build.targets.wheel.shared-data]
 "lmk/jupyter/labextension/@lmkapp" = "share/jupyter/labextensions/@lmkapp"
 "lmk/jupyter/nbextension/@lmkapp" = "share/jupyter/nbextensions/@lmkapp"
 "./install.json" = "share/jupyter/labextensions/@lmkapp/jupyter-widget/install.json"
@@ -120,3 +123,8 @@ exclude = ["generated"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F"]
+ignore = ["F403"]
+unfixable = ["F401"]

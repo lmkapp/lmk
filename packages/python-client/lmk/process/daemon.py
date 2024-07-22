@@ -255,7 +255,7 @@ class ProcessMonitorController:
                             action = message["message"]["action"]
                             body = message["message"].get("body")
                             await self._handle_session_action(action, body)
-                        except Exception as err:
+                        except Exception:
                             LOGGER.exception(
                                 "Error running action for message: %s", message
                             )
@@ -314,7 +314,7 @@ class ProcessMonitorController:
                     raise exc.JobNotFound(self.job_name)
 
                 # Create the output file
-                with open(output_path, "wb+") as f:
+                with open(output_path, "wb+"):
                     pass
 
                 LOGGER.debug("Attaching to process")

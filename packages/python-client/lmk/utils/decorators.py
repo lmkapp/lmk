@@ -1,8 +1,8 @@
-from typing import Callable, Tuple, Any
+from typing import Callable, Any
 
 
 def stack_decorators(
-    *decs: Callable[..., Any]
+    *decs: Callable[..., Any],
 ) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
     def dec(f):
         for func in reversed(decs):

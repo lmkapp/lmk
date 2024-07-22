@@ -89,7 +89,7 @@ class JobManager:
         async with self.async_session() as session:
             query = sa.select(Job).where(Job.name == name)
             if not_started:
-                query = query.where(Job.started_at == None)
+                query = query.where(Job.started_at.is_(None))
             return await session.scalar(query)
 
     async def start_job(self, name: str) -> Job:
@@ -164,10 +164,12 @@ class JobManager:
 
     async def list_jobs(self, running_only: bool = False) -> List[Job]:
         query = (
-            sa.select(Job).where(Job.started_at != None).order_by(Job.started_at.desc())
+            sa.select(Job)
+            .where(Job.started_at.is_not(None))
+            .order_by(Job.started_at.desc())
         )
         if running_only:
-            query = query.where(Job.ended_at == None)
+            query = query.where(Job.ended_at.is_(None))
 
         async with self.async_session() as session:
             return list(await session.scalars(query))

@@ -40,7 +40,9 @@ def retry(
     retry_in: Optional[Callable[[Exception, int], Optional[float]]] = None,
 ):
     if retry_in is None:
-        retry_in = lambda error, attempt: None
+
+        def retry_in(error, attempt):
+            return None
 
     def dec(f):
         @wraps(f)
