@@ -31,12 +31,14 @@ from dateutil.parser import parse as parse_dt
 from lmk import exc
 from lmk.api_client import api_client
 from lmk.constants import APP_ID, API_URL
+from lmk.generated.api.app_api import AppApi
 from lmk.generated.api.event_api import EventApi
 from lmk.generated.api.headless_auth_api import HeadlessAuthApi
 from lmk.generated.api.notification_api import NotificationApi
 from lmk.generated.api.session_api import SessionApi
 from lmk.generated.exceptions import ApiException
 from lmk.generated.models.access_token_response import AccessTokenResponse
+from lmk.generated.models.app_connection_self_response import AppConnectionSelfResponse
 from lmk.generated.models.create_headless_auth_session_request import (
     CreateHeadlessAuthSessionRequest,
 )
@@ -687,6 +689,16 @@ class Instance:
         """
         return bool(self.access_token)
 
+    def whoami(self, async_req: bool = False) -> AppConnectionSelfResponse:
+        api = AppApi(self.client)
+        return pipeline(async_req)(
+            lambda _: self._get_access_token(async_req),
+            lambda access_token: api.get_current_app(
+                async_req=async_req,
+                _headers={"Authorization": f"Bearer {access_token}"},
+            ),
+        )
+
     def logout(self) -> None:
         """
         Get rid of the current access token. After calling this, you will
@@ -706,7 +718,7 @@ class Instance:
         self, scope: Optional[str] = None, async_req: bool = False
     ) -> HeadlessAuthSessionResponse:
         if scope is None:
-            scope = "event.publish event.notify channel.read session.create"
+            scope = "event.publish event.notify channel.read session.create user.email"
 
         api = HeadlessAuthApi(self.client)
         return api.create_headless_auth_session(

@@ -38,6 +38,9 @@ class ApiClient(DefaultApiClient):
     rather than a ThreadPool from multiprocessing
     """
 
+    def request(self, *args, **kwargs):
+        return super().request(*args, **kwargs)
+
     @property
     def pool(self):
         if self._pool is None:

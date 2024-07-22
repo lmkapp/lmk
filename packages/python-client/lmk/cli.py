@@ -122,6 +122,20 @@ def login(force, manual):
     )
 
 
+@cli.command(help="Print information about the current logged in user.")
+def whoami():
+    _check_login()
+
+    instance = get_instance()
+    app_response = instance.whoami()
+
+    email = app_response.user_email or "<unknown>"
+
+    click.echo(
+        f"Logged in as {email} (ID: {app_response.user_id}, App: {app_response.app.name})"
+    )
+
+
 @cli.command(
     help=(
         "Log out of LMK. You will need to log in again to monitor jobs or use LMK "

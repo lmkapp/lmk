@@ -15,7 +15,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AppResponse'
+                $ref: '#/components/schemas/AppWithConnectedUserEmailResponse'
       tags:
         - app
   /v1/headlessAuth:
@@ -317,9 +317,11 @@ tags:
 servers: []
 components:
   schemas:
-    AppResponse:
+    AppWithConnectedUserEmailResponse:
       type: object
       properties:
+        connectedUserEmail:
+          type: string
         appId:
           type: string
         name:
@@ -645,6 +647,7 @@ components:
         status:
           type: string
           enum:
+            - NOT_SENT
             - PENDING
             - DELIVERED
             - FAILED
