@@ -71,8 +71,6 @@ jobs:
           python -m venv venv
           . venv/bin/activate
           pip install -e '.[dev]'
-          pnpm build:prod
-          pnpm build:python
       - name: Setup upterm session
         uses: lhotari/action-upterm@v1
       - name: Run tests
