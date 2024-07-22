@@ -22,23 +22,21 @@ jobs:
         python: ["3.8", "3.9", "3.10", "3.11"]
 
     steps:
-      - uses: actions/checkout@v2
-    
-      - uses: actions/setup-node@v3
+      - uses: actions/checkout@v4    
+      - uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '20'
       # PNPM stuff
       - name: Install pnpm
-        uses: pnpm/action-setup@v2
+        uses: pnpm/action-setup@v4
         id: pnpm-install
         with:
-          version: 7
           run_install: false
       - name: Get pnpm store directory
         id: pnpm-cache
         run: |
           echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         name: Setup pnpm cache
         with:
           path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
@@ -50,7 +48,7 @@ jobs:
 
       # Python stuff
       - name: Set up Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python }}
       - name: Get pip cache dir
@@ -58,7 +56,7 @@ jobs:
         run: |
           echo "STORE_PATH=$(venv/bin/pip cache dir)"
       - name: Setup python cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ${{ steps.pip-cache.outputs.STORE_PATH }} ./packages/python-client/.tox
           key: ${{ runner.os }}-python-${{ matrix.python }}-${{ hashFiles('**/pyproject.toml') }}

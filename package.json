@@ -9,6 +9,7 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
+  "packageManager": "pnpm@9.5.0",
   "pnpm": {
     "overrides": {
       "trim": "0.0.3",
