@@ -76,6 +76,4 @@ jobs:
           LMK_ACCESS_TOKEN: ${{ secrets.LMK_ACCESS_TOKEN }}
           LMK_REFRESH_TOKEN: ${{ secrets.LMK_REFRESH_TOKEN }}
           LMK_ACCESS_TOKEN_EXPIRES: ${{ secrets.LMK_ACCESS_TOKEN_EXPIRES }}
-        run: |
-          . venv/bin/activate
-          tox -e type,test-nb7-lab4,test-nb6-lab3
+        run: venv/bin/tox -e type,test-nb7-lab4,test-nb6-lab3
