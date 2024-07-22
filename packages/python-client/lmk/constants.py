@@ -1,6 +1,6 @@
 import os
 
-VERSION = "1.2.0.dev2"
+VERSION = "1.2.0.dev3"
 
 API_URL = "https://api.lmkapp.dev"
 
