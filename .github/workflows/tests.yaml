@@ -46,8 +46,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pnpm-store-
       - name: Install node dependencies
-        run: pnpm install --filter @lmkapp/jupyter-widget...
-
+        run: pnpm install
       # Python stuff
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -71,8 +70,8 @@ jobs:
           python -m venv venv
           . venv/bin/activate
           pip install -e '.[dev]'
-      - name: Setup upterm session
-        uses: lhotari/action-upterm@v1
+      # - name: Setup upterm session
+      #   uses: lhotari/action-upterm@v1
       - name: Run tests
         working-directory: ./packages/python-client
         env:
