@@ -15,7 +15,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AppWithConnectedUserEmailResponse'
+                $ref: '#/components/schemas/AppConnectionSelfResponse'
       tags:
         - app
   /v1/headlessAuth:
@@ -317,32 +317,24 @@ tags:
 servers: []
 components:
   schemas:
-    AppWithConnectedUserEmailResponse:
+    AppConnectionSelfResponse:
       type: object
       properties:
-        connectedUserEmail:
+        connectionId:
           type: string
-        appId:
+        app:
+          $ref: '#/components/schemas/AppResponse'
+        userId:
           type: string
-        name:
-          type: string
-        iconUrl:
-          type: string
-        description:
-          type: string
-        introWarningMarkdown:
+        userEmail:
           type: string
         createdAt:
           type: string
-        lastUpdatedAt:
-          type: string
       required:
-        - appId
-        - name
-        - iconUrl
-        - description
+        - connectionId
+        - app
+        - userId
         - createdAt
-        - lastUpdatedAt
     CreateHeadlessAuthSessionRequest:
       type: object
       properties:
@@ -551,6 +543,30 @@ components:
           type: string
       required:
         - action
+    AppResponse:
+      type: object
+      properties:
+        appId:
+          type: string
+        name:
+          type: string
+        iconUrl:
+          type: string
+        description:
+          type: string
+        introWarningMarkdown:
+          type: string
+        createdAt:
+          type: string
+        lastUpdatedAt:
+          type: string
+      required:
+        - appId
+        - name
+        - iconUrl
+        - description
+        - createdAt
+        - lastUpdatedAt
     ActorResponse:
       type: object
       properties:

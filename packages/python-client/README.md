@@ -82,7 +82,7 @@ If you make a change to the python code then you will need to restart the notebo
 
 ## Updating the version
 
-To update the version, install tbump and use it to bump the version.
+To update the version, install bump2version and use it to bump the version.
 By default it will also create a tag.
 
 ```bash

@@ -1,11 +1,14 @@
 import asyncio
 import atexit
 import logging
-from concurrent.futures import ThreadPoolExecutor, Executor, Future
-from typing import Optional
+import time
+from concurrent.futures import ThreadPoolExecutor, Executor
+from functools import wraps
+from typing import Optional, Callable
 
 from lmk.constants import API_URL
 from lmk.generated.api_client import ApiClient as DefaultApiClient, Configuration
+from lmk.generated.exceptions import ApiException
 
 
 LOGGER = logging.getLogger(__name__)
@@ -32,12 +35,57 @@ class _ExecutorWrapper:
         pass
 
 
+def retry(
+    func: Optional[Callable] = None,
+    retry_in: Optional[Callable[[Exception, int], Optional[float]]] = None,
+):
+    if retry_in is None:
+        retry_in = lambda error, attempt: None
+
+    def dec(f):
+        @wraps(f)
+        def wrapper(*args, **kwargs):
+            attempt = 0
+            while True:
+                attempt += 1
+                try:
+                    return f(*args, **kwargs)
+                except Exception as error:
+                    retry_ivl = retry_in(error, attempt)
+
+                    if retry_ivl is None:
+                        raise
+
+                    LOGGER.debug(
+                        "Retrying %s in %.2fs", f.__name__, retry_ivl, exc_info=True
+                    )
+                    time.sleep(retry_ivl)
+
+        return wrapper
+
+    if func is None:
+        return dec
+
+    return dec(func)
+
+
+def api_client_retry_in(error: Exception, attempt: int) -> Optional[float]:
+    if not isinstance(error, ApiException):
+        return None
+
+    if error.status == 429:
+        return min(10.0, 0.5 * 2**attempt)
+
+    return None
+
+
 class ApiClient(DefaultApiClient):
     """
     ApiClient subclass that uses a ThreadPoolExecutor wrapped with _ExecutorWrapper
     rather than a ThreadPool from multiprocessing
     """
 
+    @retry(retry_in=api_client_retry_in)
     def request(self, *args, **kwargs):
         return super().request(*args, **kwargs)
 

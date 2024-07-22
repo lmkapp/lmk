@@ -73,3 +73,9 @@ The following common options can be passed with any of the other commands:
 ```
 @shell python -m lmk logout --help | sed 's/python -m lmk/lmk/' | grep -v "\-\-help"
 ```
+
+### `whoami`
+
+```
+@shell python -m lmk whoami --help | sed 's/python -m lmk/lmk/' | grep -v "\-\-help"
+```
