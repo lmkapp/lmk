@@ -39,13 +39,13 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: ${{ matrix.python }}
+          python-version: "3.10"
       - name: Get pip cache dir
         id: pip-cache
         run: |
           echo "STORE_PATH=$(venv/bin/pip cache dir)"
       - name: Setup python cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ${{ steps.pip-cache.outputs.STORE_PATH }} ./packages/python-client/.tox
           key: ${{ runner.os }}-python-${{ hashFiles('**/pyproject.toml') }}
@@ -85,6 +85,6 @@ jobs:
           TWINE_USERNAME: ${{ secrets.TWINE_USERNAME }}
           TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
       - name: Create Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           files: ./packages/python-client/dist/lmkapp-*
